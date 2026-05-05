@@ -28,9 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
@@ -1008,17 +1008,17 @@
             this.chart1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            chartArea2.Name = "ChartArea1";
-            this.chart1.ChartAreas.Add(chartArea2);
-            legend2.Name = "Legend1";
-            this.chart1.Legends.Add(legend2);
+            chartArea1.Name = "ChartArea1";
+            this.chart1.ChartAreas.Add(chartArea1);
+            legend1.Name = "Legend1";
+            this.chart1.Legends.Add(legend1);
             this.chart1.Location = new System.Drawing.Point(15, 29);
             this.chart1.Name = "chart1";
-            series2.ChartArea = "ChartArea1";
-            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
-            series2.Legend = "Legend1";
-            series2.Name = "Series1";
-            this.chart1.Series.Add(series2);
+            series1.ChartArea = "ChartArea1";
+            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
+            series1.Legend = "Legend1";
+            series1.Name = "Series1";
+            this.chart1.Series.Add(series1);
             this.chart1.Size = new System.Drawing.Size(1046, 292);
             this.chart1.TabIndex = 0;
             this.chart1.Text = "chart1";
@@ -1048,9 +1048,9 @@
             this.label42.AutoSize = true;
             this.label42.Location = new System.Drawing.Point(658, 36);
             this.label42.Name = "label42";
-            this.label42.Size = new System.Drawing.Size(64, 23);
+            this.label42.Size = new System.Drawing.Size(32, 23);
             this.label42.TabIndex = 7;
-            this.label42.Text = "label42";
+            this.label42.Text = "dsf";
             // 
             // label41
             // 
@@ -1066,9 +1066,9 @@
             this.label40.AutoSize = true;
             this.label40.Location = new System.Drawing.Point(483, 35);
             this.label40.Name = "label40";
-            this.label40.Size = new System.Drawing.Size(64, 23);
+            this.label40.Size = new System.Drawing.Size(46, 23);
             this.label40.TabIndex = 5;
-            this.label40.Text = "label40";
+            this.label40.Text = "dsaff";
             // 
             // label39
             // 
@@ -1084,9 +1084,9 @@
             this.label38.AutoSize = true;
             this.label38.Location = new System.Drawing.Point(304, 36);
             this.label38.Name = "label38";
-            this.label38.Size = new System.Drawing.Size(64, 23);
+            this.label38.Size = new System.Drawing.Size(41, 23);
             this.label38.TabIndex = 3;
-            this.label38.Text = "label38";
+            this.label38.Text = "adsf";
             // 
             // label37
             // 
@@ -1102,9 +1102,9 @@
             this.label36.AutoSize = true;
             this.label36.Location = new System.Drawing.Point(125, 35);
             this.label36.Name = "label36";
-            this.label36.Size = new System.Drawing.Size(64, 23);
+            this.label36.Size = new System.Drawing.Size(57, 23);
             this.label36.TabIndex = 1;
-            this.label36.Text = "label36";
+            this.label36.Text = "dlfjaslj";
             // 
             // label35
             // 
