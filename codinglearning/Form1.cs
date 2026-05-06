@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using System.IO; // 파일 저장을 위해 추가
+using System.Diagnostics; // 백그라운드에서 cmd 명령어를 실행하기 위해 필요
 
 namespace codinglearning
 {
@@ -124,10 +125,23 @@ namespace codinglearning
             // 1. 현재 상태 저장 (기존)
             await firebaseManager.SaveSessionAsync(sessionData);
 
-            // 2. 그래프와 표를 위한 통계 기록 누적 저장 (이 줄이 추가되었습니다!)
+            // 2. 그래프와 표를 위한 통계 기록 누적 저장
             await firebaseManager.PushSessionLogAsync(sessionData);
 
-            MessageBox.Show($"학습이 종료되었습니다.\n총 {duration}초 기록 완료!");
+            // 1. 총 학습 시간(초) 가져오기
+            duration = sessionManager.GetTotalSeconds();
+
+            // ⭐ 2. 초(Seconds)를 시간, 분, 초로 변환하기
+            TimeSpan ts = TimeSpan.FromSeconds(duration);
+            string formattedTime = "";
+
+            // 0시간이나 0분일 때는 굳이 안 나오게 깔끔하게 처리
+            if (ts.Hours > 0) formattedTime += $"{ts.Hours}시간 ";
+            if (ts.Minutes > 0) formattedTime += $"{ts.Minutes}분 ";
+            formattedTime += $"{ts.Seconds}초";
+
+            // 3. 변환된 예쁜 시간으로 알림창 띄우기
+            MessageBox.Show($"학습 세션이 종료되었습니다!\n🔥 이번 세션 학습 시간: {formattedTime}", "세션 종료", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         #endregion
 
@@ -335,24 +349,36 @@ namespace codinglearning
             // 3. 데이터 바인딩
             foreach (var item in dict)
             {
-                string pNum = item.Key; // 문제 번호
-                string title = item.Value["title"]?.ToString() ?? "-"; // 제목
-                string diff = item.Value["diff"]?.ToString() ?? "-"; // 난이도
-                string tags = item.Value["tags"]?.ToString() ?? "-"; // 태그
-                bool isSolved = item.Value["solvedAfter"] != null && (bool)item.Value["solvedAfter"]; // 해결 여부
-                string date = item.Value["addedDate"]?.ToString() ?? "-"; // 날짜
-                string reviewDate = item.Value["reviewDate"]?.ToString() ?? "-"; // 복습 예정일
+                string pNum = item.Key;
+                string title = item.Value["title"]?.ToString() ?? "-";
+                string diff = item.Value["diff"]?.ToString() ?? "-";
+                string tags = item.Value["tags"]?.ToString() ?? "-";
+                bool isSolved = item.Value["solvedAfter"] != null && (bool)item.Value["solvedAfter"];
+                string date = item.Value["addedDate"]?.ToString() ?? "-";
+                string reviewDateStr = item.Value["reviewDate"]?.ToString() ?? "-"; 
 
-                // 화면의 열 순서에 맞춰 정확히 추가
-                dgvWrongList.Rows.Add(
+                // 1. 표에 먼저 데이터를 한 줄 추가하고, 그 줄의 인덱스(순서)를 기억합니다.
+                int rowIndex = dgvWrongList.Rows.Add(
                     pNum,
                     title,
                     diff,
                     tags,
                     isSolved ? "✅ 해결됨" : "❌ 미해결",
                     date,
-                    reviewDate
+                    reviewDateStr 
                 );
+
+                // 2. 강조 로직: 미해결 상태이고, 날짜 데이터가 정상적으로 변환될 때
+                if (!isSolved && DateTime.TryParse(reviewDateStr, out DateTime reviewDate))
+                {
+                    // 복습 예정일이 현재 시간(지금)보다 과거라면? = 기한 지남!
+                    if (reviewDate < DateTime.Now)
+                    {
+                        // 튀지 않는 차분한 붉은색(IndianRed)으로 글자색 변경 후 살짝 굵게 처리
+                        dgvWrongList.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.IndianRed;
+                        dgvWrongList.Rows[rowIndex].DefaultCellStyle.Font = new Font(dgvWrongList.Font, FontStyle.Bold);
+                    }
+                }
             }
         }
 
@@ -510,6 +536,67 @@ namespace codinglearning
             }
         }
         #endregion
+
+        private void lblGitHubPush_Click(object sender, EventArgs e)
+        {
+            // 1. 코드를 저장하던 폴더 경로 가져오기
+            string docsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string targetFolder = Path.Combine(docsPath, "CodingLearning_Submissions");
+
+            if (!Directory.Exists(targetFolder))
+            {
+                MessageBox.Show("아직 저장된 코드가 없어요.\n먼저 문제를 풀어보세요!", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            try
+            {
+                // 2. 터미널(cmd) 명령어 실행 준비
+                ProcessStartInfo processInfo = new ProcessStartInfo("cmd.exe");
+                processInfo.WorkingDirectory = targetFolder; // 이 폴더 안에서 명령어를 실행하겠다는 뜻
+
+                // 3. 커밋 메시지에 오늘 날짜와 시간 자동으로 넣기
+                string commitMessage = $"Auto commit: {DateTime.Now.ToString("yyyy-MM-dd HH:mm")} 학습 기록";
+
+                // 4. 실행할 깃허브 명령어 3단 콤보 (add -> commit -> push)
+                processInfo.Arguments = $"/c git add . && git commit -m \"{commitMessage}\" && git push";
+
+                // 5. 까만 콘솔 창을 화면에 안 띄우고 몰래(백그라운드에서) 실행하기!
+                processInfo.CreateNoWindow = true;
+                processInfo.UseShellExecute = false;
+                processInfo.RedirectStandardOutput = true;
+                processInfo.RedirectStandardError = true;
+
+                // 6. 실행 및 결과 확인
+                using (Process process = Process.Start(processInfo))
+                {
+                    process.WaitForExit(); // 업로드가 끝날 때까지 프로그램이 잠시 기다림
+                    string error = process.StandardError.ReadToEnd(); // 혹시 에러가 났는지 확인
+
+                    // ExitCode가 0이면 성공, 아니면 실패
+                    if (process.ExitCode == 0)
+                    {
+                        MessageBox.Show("🌱 깃허브에 성공적으로 코드가 업로드되었습니다!", "잔디 심기 성공", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        // 변경 사항이 없어서 커밋할 게 없는 경우도 에러(ExitCode 1)로 잡히기 때문에 예외 처리
+                        if (error.Contains("nothing to commit") || error.Contains("working tree clean"))
+                        {
+                            MessageBox.Show("새로 추가되거나 변경된 코드가 없습니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else
+                        {
+                            MessageBox.Show($"❌ 업로드 실패.\n(원인: {error})", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"명령어 실행 중 오류가 났어: {ex.Message}", "시스템 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
 
         private async Task LoadTimeStatisticsUI()
         {
