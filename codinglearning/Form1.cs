@@ -598,6 +598,117 @@ namespace codinglearning
             }
         }
 
+        // 1. 이 변수는 반드시 메서드 바깥(위쪽)에 있어야 함 (이벤트 메서드가 호출될 때마다 초기화되면 안 되니까)
+        private string previousLang = "C#";
+
+        // 2. 여기서부터 끝까지 콤보박스 이벤트 메서드 덮어쓰기
+        private void cbLanguage_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            string selectedLang = cbLanguage.SelectedItem?.ToString();
+
+            // 같은 언어를 또 클릭한 거면 무시
+            if (selectedLang == previousLang) return;
+
+            bool isUserCode = false;
+            string currentCode = txtCode.Text;
+
+            if (!string.IsNullOrWhiteSpace(currentCode))
+            {
+                // 조건 A: 기본 주석을 아예 지워버린 경우
+                if (!currentCode.Contains("여기에 코드를 작성하세요"))
+                {
+                    isUserCode = true;
+                }
+                // 조건 B: 주석은 놔뒀지만, 코드를 추가해서 '언어별 기본 길이'보다 길어진 경우
+                else
+                {
+                    int len = currentCode.Length;
+                    if (previousLang == "C#" && len > 190) isUserCode = true;
+                    else if (previousLang == "C++" && len > 110) isUserCode = true;
+                    else if (previousLang == "Java" && len > 140) isUserCode = true;
+                    else if (previousLang == "Python" && len > 95) isUserCode = true;
+                }
+            }
+
+            // 유저가 짠 코드가 맞다면 경고창 띄우기
+            if (isUserCode)
+            {
+                DialogResult result = MessageBox.Show("이미 작성 중인 코드가 있습니다. 언어를 변경하고 초기화할까요?", "언어 변경", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                // '아니요'를 누른 경우
+                if (result == DialogResult.No)
+                {
+                    // 콤보박스 선택이 바뀌는 이벤트 잠시 끄고 원상복구
+                    cbLanguage.SelectedIndexChanged -= cbLanguage_SelectedIndexChanged;
+                    cbLanguage.SelectedItem = previousLang;
+                    cbLanguage.SelectedIndexChanged += cbLanguage_SelectedIndexChanged;
+                    return; // 뼈대 코드 생성 취소
+                }
+            }
+
+            // '예'를 누르거나, 처음 빈 화면일 때 뼈대 코드 세팅
+            switch (selectedLang)
+            {
+                case "C#":
+                    txtCode.Text =
+    @"using System;
+
+namespace CodingTest
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            // 여기에 코드를 작성하세요
+            
+        }
+    }
+}";
+                    break;
+
+                case "C++":
+                    txtCode.Text =
+    @"#include <iostream>
+using namespace std;
+
+int main() {
+    // 여기에 코드를 작성하세요
+    
+    return 0;
+}";
+                    break;
+
+                case "Java":
+                    txtCode.Text =
+    @"import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        // 여기에 코드를 작성하세요
+        
+    }
+}";
+                    break;
+
+                case "Python":
+                    txtCode.Text =
+    @"def main():
+    # 여기에 코드를 작성하세요
+    pass
+
+if __name__ == '__main__':
+    main()";
+                    break;
+
+                default:
+                    txtCode.Text = "";
+                    break;
+            }
+
+            // 방금 세팅 완료된 언어를 '이전 언어'로 업데이트
+            previousLang = selectedLang;
+        }
+
         private async Task LoadTimeStatisticsUI()
         {
             // 1. Firebase에서 누적 세션 기록 가져오기
