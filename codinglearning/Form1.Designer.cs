@@ -29,15 +29,16 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea9 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend9 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series9 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea10 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend10 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series10 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.lblDarkMode = new System.Windows.Forms.Label();
             this.lblSelProbTags = new System.Windows.Forms.Label();
             this.lblSelProbDiff = new System.Windows.Forms.Label();
             this.lblSelProbTitle = new System.Windows.Forms.Label();
@@ -214,6 +215,7 @@
             // 
             this.groupBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox3.Controls.Add(this.lblDarkMode);
             this.groupBox3.Controls.Add(this.lblSelProbTags);
             this.groupBox3.Controls.Add(this.lblSelProbDiff);
             this.groupBox3.Controls.Add(this.lblSelProbTitle);
@@ -232,6 +234,18 @@
             this.groupBox3.TabIndex = 3;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "선택된 문제";
+            // 
+            // lblDarkMode
+            // 
+            this.lblDarkMode.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblDarkMode.AutoSize = true;
+            this.lblDarkMode.Font = new System.Drawing.Font("맑은 고딕", 9.857143F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.lblDarkMode.Location = new System.Drawing.Point(137, -16);
+            this.lblDarkMode.Name = "lblDarkMode";
+            this.lblDarkMode.Size = new System.Drawing.Size(159, 32);
+            this.lblDarkMode.TabIndex = 3;
+            this.lblDarkMode.Text = "🌙 다크 모드";
+            this.lblDarkMode.Click += new System.EventHandler(this.lblDarkMode_Click);
             // 
             // lblSelProbTags
             // 
@@ -1151,18 +1165,18 @@
             this.chartAccuracy.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            chartArea9.Name = "ChartArea1";
-            this.chartAccuracy.ChartAreas.Add(chartArea9);
-            legend9.Name = "Legend1";
-            this.chartAccuracy.Legends.Add(legend9);
+            chartArea1.Name = "ChartArea1";
+            this.chartAccuracy.ChartAreas.Add(chartArea1);
+            legend1.Name = "Legend1";
+            this.chartAccuracy.Legends.Add(legend1);
             this.chartAccuracy.Location = new System.Drawing.Point(21, 41);
             this.chartAccuracy.Margin = new System.Windows.Forms.Padding(4);
             this.chartAccuracy.Name = "chartAccuracy";
-            series9.ChartArea = "ChartArea1";
-            series9.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
-            series9.Legend = "Legend1";
-            series9.Name = "Series1";
-            this.chartAccuracy.Series.Add(series9);
+            series1.ChartArea = "ChartArea1";
+            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
+            series1.Legend = "Legend1";
+            series1.Name = "Series1";
+            this.chartAccuracy.Series.Add(series1);
             this.chartAccuracy.Size = new System.Drawing.Size(1438, 353);
             this.chartAccuracy.TabIndex = 0;
             this.chartAccuracy.Text = "chart1";
@@ -1442,18 +1456,18 @@
             this.chartTimeHistory.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            chartArea10.Name = "ChartArea1";
-            this.chartTimeHistory.ChartAreas.Add(chartArea10);
-            legend10.Name = "Legend1";
-            this.chartTimeHistory.Legends.Add(legend10);
+            chartArea2.Name = "ChartArea1";
+            this.chartTimeHistory.ChartAreas.Add(chartArea2);
+            legend2.Name = "Legend1";
+            this.chartTimeHistory.Legends.Add(legend2);
             this.chartTimeHistory.Location = new System.Drawing.Point(21, 41);
             this.chartTimeHistory.Margin = new System.Windows.Forms.Padding(4);
             this.chartTimeHistory.Name = "chartTimeHistory";
-            series10.ChartArea = "ChartArea1";
-            series10.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
-            series10.Legend = "Legend1";
-            series10.Name = "Series1";
-            this.chartTimeHistory.Series.Add(series10);
+            series2.ChartArea = "ChartArea1";
+            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
+            series2.Legend = "Legend1";
+            series2.Name = "Series1";
+            this.chartTimeHistory.Series.Add(series2);
             this.chartTimeHistory.Size = new System.Drawing.Size(1438, 346);
             this.chartTimeHistory.TabIndex = 0;
             this.chartTimeHistory.Text = "chart1";
@@ -1499,6 +1513,7 @@
             // 
             this.lblGitHubPush.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.lblGitHubPush.AutoSize = true;
+            this.lblGitHubPush.BackColor = System.Drawing.Color.Transparent;
             this.lblGitHubPush.Font = new System.Drawing.Font("맑은 고딕", 9.857143F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.lblGitHubPush.Location = new System.Drawing.Point(1343, 873);
             this.lblGitHubPush.Name = "lblGitHubPush";
@@ -1676,6 +1691,7 @@
         private System.Windows.Forms.GroupBox groupBox4;
         private System.Windows.Forms.DataVisualization.Charting.Chart chartTimeHistory;
         private System.Windows.Forms.Label lblGitHubPush;
+        private System.Windows.Forms.Label lblDarkMode;
     }
 }
 

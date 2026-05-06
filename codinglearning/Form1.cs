@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using System.IO; // 파일 저장을 위해 추가
 using System.Diagnostics; // 백그라운드에서 cmd 명령어를 실행하기 위해 필요
+using System.Text;
 
 namespace codinglearning
 {
@@ -51,6 +52,23 @@ namespace codinglearning
 
             // 앱 실행 시 세션 시작
             StartLearningSession();
+
+            // 1. 라벨의 소속을 특정 탭 페이지가 아닌 폼(this)로 강제 지정 (에러 방지)
+            lblDarkMode.Parent = this;
+
+            // 2. 탭 컨트롤 우측 상단(빈 공간)으로 위치(좌표) 계산해서 이동시키기
+            // X좌표: 탭컨트롤 전체 넓이 - 라벨 넓이 - 우측 여백(10)
+            // Y좌표: 위에서부터 5픽셀 아래 (탭 헤더 쪽에 예쁘게 걸침)
+            lblDarkMode.Location = new Point(tabControl1.Width - lblDarkMode.Width - 18, 8);
+
+            // 3. 탭 컨트롤 지붕 위에서 맨 앞으로 튀어나오게 하기
+            lblDarkMode.BringToFront();
+
+            // 4. 창 크기를 늘려도 오른쪽 끝에 예쁘게 붙어있도록 닻(Anchor) 내리기
+            lblDarkMode.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+
+            // 5. 라벨 배경을 투명하게 해서 탭 컨트롤 배경에 자연스럽게 스며들게 하기
+            lblDarkMode.BackColor = Color.Transparent;
         }
 
         private void learningTimer_Tick(object sender, EventArgs e)
@@ -355,7 +373,7 @@ namespace codinglearning
                 string tags = item.Value["tags"]?.ToString() ?? "-";
                 bool isSolved = item.Value["solvedAfter"] != null && (bool)item.Value["solvedAfter"];
                 string date = item.Value["addedDate"]?.ToString() ?? "-";
-                string reviewDateStr = item.Value["reviewDate"]?.ToString() ?? "-"; 
+                string reviewDateStr = item.Value["reviewDate"]?.ToString() ?? "-";
 
                 // 1. 표에 먼저 데이터를 한 줄 추가하고, 그 줄의 인덱스(순서)를 기억합니다.
                 int rowIndex = dgvWrongList.Rows.Add(
@@ -365,7 +383,7 @@ namespace codinglearning
                     tags,
                     isSolved ? "✅ 해결됨" : "❌ 미해결",
                     date,
-                    reviewDateStr 
+                    reviewDateStr
                 );
 
                 // 2. 강조 로직: 미해결 상태이고, 날짜 데이터가 정상적으로 변환될 때
@@ -709,6 +727,65 @@ if __name__ == '__main__':
             previousLang = selectedLang;
         }
 
+        private void btnExportWrongList_Click(object sender, EventArgs e)
+        {
+            // 1. 방어 코드: 표에 데이터가 아예 없으면 알림만 띄우고 종료
+            if (dgvWrongList.Rows.Count == 0 || (dgvWrongList.Rows.Count == 1 && dgvWrongList.Rows[0].IsNewRow))
+            {
+                MessageBox.Show("추출할 오답 기록이 없습니다. 먼저 문제를 풀어보세요!", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            try
+            {
+                // 2. 마크다운(Markdown) 문서 내용 조립 시작!
+                StringBuilder md = new StringBuilder();
+                md.AppendLine("# 🚨 나의 코딩 테스트 오답 노트");
+                md.AppendLine($"> **추출 일자:** {DateTime.Now.ToString("yyyy년 MM월 dd일 HH:mm")}");
+                md.AppendLine();
+
+                // 3. 표 머리글(컬럼 제목) 세팅 
+                List<string> headers = new List<string>();
+                foreach (DataGridViewColumn col in dgvWrongList.Columns)
+                {
+                    headers.Add(col.HeaderText);
+                }
+                md.AppendLine("| " + string.Join(" | ", headers) + " |");
+
+                // 4. 마크다운 표 구분선 세팅 (---|---|---)
+                List<string> separators = new List<string>();
+                for (int i = 0; i < headers.Count; i++) separators.Add("---");
+                md.AppendLine("| " + string.Join(" | ", separators) + " |");
+
+                // 5. 표 안의 실제 데이터(오답 기록)들 쭉쭉 뽑아서 채우기
+                foreach (DataGridViewRow row in dgvWrongList.Rows)
+                {
+                    if (row.IsNewRow) continue; // 빈 줄 건너뛰기
+
+                    List<string> cells = new List<string>();
+                    foreach (DataGridViewCell cell in row.Cells)
+                    {
+                        cells.Add(cell.Value?.ToString() ?? "");
+                    }
+                    md.AppendLine("| " + string.Join(" | ", cells) + " |");
+                }
+
+                // 6. 바탕화면 경로 가져와서 파일로 저장하기
+                string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                string fileName = $"오답노트_{DateTime.Now.ToString("yyyyMMdd")}.md";
+                string filePath = Path.Combine(desktopPath, fileName);
+
+                File.WriteAllText(filePath, md.ToString(), Encoding.UTF8);
+
+                // 7. 성공 알림창!
+                MessageBox.Show($"바탕화면에 [{fileName}] 파일이 생성되었습니다!\n노션이나 블로그에 그대로 복붙해 보세요. 🚀", "추출 성공", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"파일 생성 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         private async Task LoadTimeStatisticsUI()
         {
             // 1. Firebase에서 누적 세션 기록 가져오기
@@ -916,6 +993,86 @@ if __name__ == '__main__':
             catch (Exception ex)
             {
                 MessageBox.Show($"파일 자동 저장 실패: {ex.Message}");
+            }
+        }
+
+        private void lblDarkMode_Click(object sender, EventArgs e)
+        {
+            isDarkMode = !isDarkMode; // 상태 뒤집기 (false <-> true)
+
+            // 버튼 글자 및 아이콘 변경
+            lblDarkMode.Text = isDarkMode ? "🌞 라이트 모드" : "🌙 다크 모드";
+
+            // 마법의 테마 적용 메서드 실행!
+            ApplyTheme();
+        }
+
+        private bool isDarkMode = false; // 현재 다크 모드인지 기억하는 변수
+
+        // 🎨 테마(다크/라이트)를 적용하는 메서드
+        private void ApplyTheme()
+        {
+            // 다크모드용 세련된 색상 팔레트 (원하는 색으로 조정 가능!)
+            Color bgColor = isDarkMode ? Color.FromArgb(30, 30, 30) : SystemColors.Control;
+            Color textColor = isDarkMode ? Color.White : SystemColors.ControlText;
+            Color boxColor = isDarkMode ? Color.FromArgb(45, 45, 48) : Color.White;
+
+            // 1. 폼 전체 기본 배경/글자색 변경
+            this.BackColor = bgColor;
+            this.ForeColor = textColor;
+
+            // 2. 폼 안의 모든 부품(컨트롤) 색상 싹 다 바꾸기
+            ChangeControlColors(this, bgColor, textColor, boxColor);
+
+            // ⭐ 3. 아까 만든 잔디심기 라벨 보호색도 현재 테마 배경색에 맞춰주기
+            if (lblGitHubPush != null)
+            {
+                lblGitHubPush.BackColor = bgColor;
+            }
+        }
+
+        // 🔍 폼 안의 부품들을 파고들며 색상을 칠해주는 재귀 메서드 (이름 충돌 방지 완벽 적용)
+        private void ChangeControlColors(Control parent, Color bg, Color text, Color box)
+        {
+            foreach (Control c in parent.Controls)
+            {
+                // 탭 컨트롤 안의 페이지 배경색
+                if (c is TabPage)
+                {
+                    c.BackColor = bg;
+                    c.ForeColor = text;
+                }
+                // 코드 입력창, 콤보박스 등 입력란
+                else if (c is System.Windows.Forms.TextBox || c is System.Windows.Forms.ComboBox)
+                {
+                    c.BackColor = box;
+                    c.ForeColor = text;
+                    // 테두리가 있는 컨트롤은 스타일을 살짝 바꿔주면 더 예쁨
+                    if (c is System.Windows.Forms.TextBox tb) tb.BorderStyle = isDarkMode ? BorderStyle.FixedSingle : BorderStyle.Fixed3D;
+                }
+                // 오답노트, 기록 등의 표(DataGridView)
+                else if (c is System.Windows.Forms.DataGridView dgv)
+                {
+                    dgv.BackgroundColor = box;
+                    dgv.DefaultCellStyle.BackColor = box;
+                    dgv.DefaultCellStyle.ForeColor = text;
+
+                    // 표 머리글(제목) 색상도 변경 허용
+                    dgv.EnableHeadersVisualStyles = false;
+                    dgv.ColumnHeadersDefaultCellStyle.BackColor = isDarkMode ? Color.FromArgb(60, 60, 60) : SystemColors.Control;
+                    dgv.ColumnHeadersDefaultCellStyle.ForeColor = text;
+                }
+                // 라벨, 체크박스 등 글자만 있는 것들
+                else if (c is System.Windows.Forms.Label || c is System.Windows.Forms.CheckBox)
+                {
+                    c.ForeColor = text;
+                }
+
+                // 패널이나 탭 컨트롤 안에 부품이 더 들어있으면 파고들어가서 변경!
+                if (c.HasChildren)
+                {
+                    ChangeControlColors(c, bg, text, box);
+                }
             }
         }
     }
