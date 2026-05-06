@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using System.IO; // 파일 저장을 위해 추가
 
 namespace codinglearning
 {
@@ -266,6 +267,9 @@ namespace codinglearning
                 var (isCorrect, message) = await apiService.RunJudge0Async(txtCode.Text, cbLanguage.SelectedItem.ToString());
                 txtResult.Text = message;
 
+                // 정답/오답 상관없이 무조건 저장 메서드 실행 (isCorrect 결과를 함께 넘겨줌)
+                SaveCodeToLocalFile(selId, selTitle, txtCode.Text, cbLanguage.SelectedItem.ToString(), isCorrect);
+
                 var record = new SubmissionRecord
                 {
                     code = txtCode.Text,
@@ -318,14 +322,15 @@ namespace codinglearning
             dgvWrongList.Rows.Clear();
             if (dict == null) return;
 
-            // 2. 컬럼 헤더 텍스트 설정 (화면상 6개 컬럼 기준)
-            dgvWrongList.ColumnCount = 6;
+            // 2. 컬럼 헤더 텍스트 설정 (화면상 7개 컬럼 기준)
+            dgvWrongList.ColumnCount = 7;
             dgvWrongList.Columns[0].HeaderText = "번호";
             dgvWrongList.Columns[1].HeaderText = "제목";
             dgvWrongList.Columns[2].HeaderText = "난이도";
             dgvWrongList.Columns[3].HeaderText = "태그";
             dgvWrongList.Columns[4].HeaderText = "결과";
-            dgvWrongList.Columns[5].HeaderText = "날짜";
+            dgvWrongList.Columns[5].HeaderText = "오답 발생일";
+            dgvWrongList.Columns[6].HeaderText = "복습 예정일";
 
             // 3. 데이터 바인딩
             foreach (var item in dict)
@@ -336,6 +341,7 @@ namespace codinglearning
                 string tags = item.Value["tags"]?.ToString() ?? "-"; // 태그
                 bool isSolved = item.Value["solvedAfter"] != null && (bool)item.Value["solvedAfter"]; // 해결 여부
                 string date = item.Value["addedDate"]?.ToString() ?? "-"; // 날짜
+                string reviewDate = item.Value["reviewDate"]?.ToString() ?? "-"; // 복습 예정일
 
                 // 화면의 열 순서에 맞춰 정확히 추가
                 dgvWrongList.Rows.Add(
@@ -344,7 +350,8 @@ namespace codinglearning
                     diff,
                     tags,
                     isSolved ? "✅ 해결됨" : "❌ 미해결",
-                    date
+                    date,
+                    reviewDate
                 );
             }
         }
@@ -486,9 +493,20 @@ namespace codinglearning
                 chartAccuracy.Series[0].Points.AddXY("정답", correctCount);
                 chartAccuracy.Series[0].Points.AddXY("오답", wrongCount);
 
-                // 차분하고 세련된 뮤트 톤
-                chartAccuracy.Series[0].Points[0].Color = Color.FromArgb(143, 188, 143); // 다크 씨그린 (정답)
-                chartAccuracy.Series[0].Points[1].Color = Color.FromArgb(224, 159, 150); // 부드러운 로즈/인디안레드 (오답)
+                // 1. 차트 막대 색상 지정 (뮤트 톤)
+                Color correctColor = Color.FromArgb(143, 188, 143);
+                Color wrongColor = Color.FromArgb(224, 159, 150);
+
+                chartAccuracy.Series[0].Points[0].Color = correctColor;
+                chartAccuracy.Series[0].Points[1].Color = wrongColor;
+
+                // 2. 기본으로 생기는 파란색 '풀이 통계' 범례 숨기기
+                chartAccuracy.Series[0].IsVisibleInLegend = false;
+
+                // 3. 우리가 지정한 색상으로 직접 예쁜 범례(Legend) 만들기
+                chartAccuracy.Legends[0].CustomItems.Clear();
+                chartAccuracy.Legends[0].CustomItems.Add(correctColor, "정답");
+                chartAccuracy.Legends[0].CustomItems.Add(wrongColor, "오답");
             }
         }
         #endregion
@@ -648,6 +666,58 @@ namespace codinglearning
                 chartAccuracy.ChartAreas[0].AxisY.MajorGrid.LineColor = Color.FromArgb(240, 240, 240);
                 chartAccuracy.ChartAreas[0].AxisY.MajorTickMark.LineColor = Color.LightGray;
                 chartAccuracy.ChartAreas[0].AxisX.MajorTickMark.LineColor = Color.LightGray;
+            }
+        }
+
+        private void SaveCodeToLocalFile(string problemId, string title, string code, string language, bool isCorrect)
+        {
+            try
+            {
+                // 1. 기본 저장 폴더 설정
+                string docsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string baseFolder = Path.Combine(docsPath, "CodingLearning_Submissions");
+
+                // 2. 정답/오답에 따라 예쁘게 하위 폴더 나누기 📁
+                string subFolder = isCorrect ? "Correct" : "Wrong";
+                string targetFolder = Path.Combine(baseFolder, subFolder);
+
+                if (!Directory.Exists(targetFolder))
+                {
+                    Directory.CreateDirectory(targetFolder); // 폴더가 없으면 알아서 생성!
+                }
+
+                // 3. 언어에 맞는 확장자 결정
+                string extension = ".txt";
+                if (language == "C#") extension = ".cs";
+                else if (language == "C++") extension = ".cpp";
+                else if (language == "Python") extension = ".py";
+                else if (language == "Java") extension = ".java";
+
+                // 4. 파일명에 못 쓰는 특수문자 필터링 (깔끔한 파일명을 위해)
+                string safeTitle = string.Join("_", title.Split(Path.GetInvalidFileNameChars()));
+
+                // 5. 상황에 맞는 파일 이름 만들기
+                string fileName;
+                if (isCorrect)
+                {
+                    // 정답일 경우: [123A] Watermelon.cpp (최종 정답본 1개만 깔끔하게 유지)
+                    fileName = $"[{problemId}] {safeTitle}{extension}";
+                }
+                else
+                {
+                    // 오답일 경우: [123A] Watermelon_20260506_160436.cpp (시간을 붙여서 오답 히스토리 누적)
+                    string timeStamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                    fileName = $"[{problemId}] {safeTitle}_{timeStamp}{extension}";
+                }
+
+                string filePath = Path.Combine(targetFolder, fileName);
+
+                // 6. 파일 쓰기
+                File.WriteAllText(filePath, code);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"파일 자동 저장 실패: {ex.Message}");
             }
         }
     }

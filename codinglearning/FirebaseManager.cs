@@ -56,6 +56,7 @@ namespace codinglearning.Services
                 var wrongData = new WrongProblemData
                 {
                     addedDate = record.date,
+                    reviewDate = DateTime.Now.AddDays(3).ToString("yyyy-MM-dd HH:mm:ss"), // 오늘부터 3일 뒤의 날짜를 문자열로 저장
                     solvedAfter = false,
                     title = record.title,
                     diff = diff,

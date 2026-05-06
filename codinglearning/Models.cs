@@ -28,6 +28,7 @@ namespace codinglearning.Models
         public string diff { get; set; }
         public string tags { get; set; }
         public string addedDate { get; set; }
+        public string reviewDate { get; set; } // 다음 복습 예정일
         public bool solvedAfter { get; set; }
     }
 }
