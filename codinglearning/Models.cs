@@ -9,7 +9,6 @@ namespace codinglearning.Models
         public string sessionEnd { get; set; }
         public int sessionDuration { get; set; }
         public string lastActiveTime { get; set; }
-        public bool hwConnected { get; set; }
     }
 
     // 풀이 시도 기록 데이터[cite: 1]

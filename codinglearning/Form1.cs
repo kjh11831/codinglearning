@@ -44,6 +44,9 @@ namespace codinglearning
                 chartAccuracy.Series[0].Name = "풀이 통계";
             }
 
+            // UI 스타일 적용 메서드 호출
+            ApplyMinimalStyle();
+
             // 앱 실행 시 세션 시작
             StartLearningSession();
         }
@@ -114,8 +117,7 @@ namespace codinglearning
                 status = "Break",
                 sessionEnd = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                 sessionDuration = duration,
-                lastActiveTime = sessionManager.LastActiveTime.ToString("yyyy-MM-dd HH:mm:ss"),
-                hwConnected = false
+                lastActiveTime = sessionManager.LastActiveTime.ToString("yyyy-MM-dd HH:mm:ss")
             };
 
             // 1. 현재 상태 저장 (기존)
@@ -484,8 +486,9 @@ namespace codinglearning
                 chartAccuracy.Series[0].Points.AddXY("정답", correctCount);
                 chartAccuracy.Series[0].Points.AddXY("오답", wrongCount);
 
-                chartAccuracy.Series[0].Points[0].Color = System.Drawing.Color.MediumSeaGreen;
-                chartAccuracy.Series[0].Points[1].Color = System.Drawing.Color.Tomato;
+                // 차분하고 세련된 뮤트 톤
+                chartAccuracy.Series[0].Points[0].Color = Color.FromArgb(143, 188, 143); // 다크 씨그린 (정답)
+                chartAccuracy.Series[0].Points[1].Color = Color.FromArgb(224, 159, 150); // 부드러운 로즈/인디안레드 (오답)
             }
         }
         #endregion
@@ -584,7 +587,7 @@ namespace codinglearning
 
                 // 캡처하신 화면에 맞게 가로 막대(Bar)로 설정
                 series.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
-                series.Color = Color.CornflowerBlue; // 부드러운 파란색 (원하시면 색상 변경 가능)
+                series.Color = Color.FromArgb(160, 170, 180); // 세련된 웜그레이+블루 느낌의 뉴트럴 톤
                 series.IsValueShownAsLabel = true; // 막대 끝에 숫자(분) 표시
 
                 foreach (var kvp in dailyStudyMap)
@@ -594,6 +597,57 @@ namespace codinglearning
                     double minutes = Math.Round(kvp.Value / 60.0, 1);
                     series.Points.AddXY(shortDate, minutes);
                 }
+            }
+        }
+
+        private void ApplyMinimalStyle()
+        {
+            // 1. 데이터그리드뷰(표) 다이어트 및 색상 빼기
+            // 폼 안에 있는 모든 표에 동일한 스타일을 적용합니다.
+            DataGridView[] grids = { dgvTimeRecords, dgvWrongList, dgvProblems, dgvRecentRecords };
+
+            foreach (var grid in grids)
+            {
+                if (grid == null) continue;
+
+                // 배경을 완전 하얗게, 겉 테두리는 없애기
+                grid.BackgroundColor = Color.White;
+                grid.BorderStyle = BorderStyle.None;
+
+                // 셀 테두리는 가로선만 아주 연한 회색으로 (세로선을 없애서 시원하게 만듦)
+                grid.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+                grid.GridColor = Color.FromArgb(240, 240, 240);
+
+                // 선택했을 때 눈 아픈 파란색 대신, 세련된 라이트 그레이로 설정
+                grid.DefaultCellStyle.SelectionBackColor = Color.FromArgb(245, 245, 245);
+                grid.DefaultCellStyle.SelectionForeColor = Color.Black;
+
+                // 불필요한 맨 왼쪽 화살표 칸(RowHeaders) 숨기기
+                grid.RowHeadersVisible = false;
+            }
+
+            // 2. 차트 격자무늬(Grid) 연하게 만들거나 없애기
+            if (chartTimeHistory != null)
+            {
+                // X축 (세로선) 완전 삭제
+                chartTimeHistory.ChartAreas[0].AxisX.MajorGrid.LineWidth = 0;
+
+                // Y축 (가로선) 아주 연한 회색으로 얇게 처리
+                chartTimeHistory.ChartAreas[0].AxisY.MajorGrid.LineColor = Color.FromArgb(240, 240, 240);
+                chartTimeHistory.ChartAreas[0].AxisY.MajorTickMark.LineColor = Color.LightGray;
+                chartTimeHistory.ChartAreas[0].AxisX.MajorTickMark.LineColor = Color.LightGray;
+            }
+
+            // chartAccuracy(정답률 차트) 설정
+            if (chartAccuracy != null)
+            {
+                // 세로 막대그래프의 세로선(X축 격자) 완전 제거
+                chartAccuracy.ChartAreas[0].AxisX.MajorGrid.LineWidth = 0;
+
+                // 가로선(Y축 격자)은 눈에 띄지 않게 아주 연한 회색으로
+                chartAccuracy.ChartAreas[0].AxisY.MajorGrid.LineColor = Color.FromArgb(240, 240, 240);
+                chartAccuracy.ChartAreas[0].AxisY.MajorTickMark.LineColor = Color.LightGray;
+                chartAccuracy.ChartAreas[0].AxisX.MajorTickMark.LineColor = Color.LightGray;
             }
         }
     }
