@@ -25,9 +25,24 @@ namespace codinglearning.Services
             return client != null;
         }
 
+        // 1. 현재 학습 상태 저장
         public async Task SaveSessionAsync(SessionData data)
         {
             await client.SetAsync($"learningStatus/{uid}", data);
+        }
+
+        // 2. 학습 기록 '누적' 저장 (그래프용)
+        public async Task PushSessionLogAsync(SessionData data)
+        {
+            await client.PushAsync($"sessionLogs/{uid}", data);
+        }
+
+        // 3. 누적된 전체 학습 기록 불러오기 (그래프용)
+        public async Task<Dictionary<string, SessionData>> GetAllSessionLogsAsync()
+        {
+            FirebaseResponse res = await client.GetAsync($"sessionLogs/{uid}");
+            if (res.Body == "null") return null;
+            return res.ResultAs<Dictionary<string, SessionData>>();
         }
 
         public async Task SaveSubmissionAsync(string problemId, SubmissionRecord record, string diff, string tags)

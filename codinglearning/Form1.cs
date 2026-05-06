@@ -118,7 +118,12 @@ namespace codinglearning
                 hwConnected = false
             };
 
+            // 1. 현재 상태 저장 (기존)
             await firebaseManager.SaveSessionAsync(sessionData);
+
+            // 2. 그래프와 표를 위한 통계 기록 누적 저장 (이 줄이 추가되었습니다!)
+            await firebaseManager.PushSessionLogAsync(sessionData);
+
             MessageBox.Show($"학습이 종료되었습니다.\n총 {duration}초 기록 완료!");
         }
         #endregion
@@ -301,6 +306,7 @@ namespace codinglearning
             sessionManager.RecordUserAction();
             if (tabControl1.SelectedIndex == 2) await LoadWrongListUI();
             else if (tabControl1.SelectedIndex == 3) await LoadStatisticsUI();
+            else if (tabControl1.SelectedIndex == 4) await LoadTimeStatisticsUI();
         }
 
         private async Task LoadWrongListUI()
@@ -483,5 +489,112 @@ namespace codinglearning
             }
         }
         #endregion
+
+        private async Task LoadTimeStatisticsUI()
+        {
+            // 1. Firebase에서 누적 세션 기록 가져오기
+            var logs = await firebaseManager.GetAllSessionLogsAsync();
+
+            // 데이터가 아예 없으면 표 초기화 후 종료
+            if (logs == null || logs.Count == 0)
+            {
+                dgvTimeRecords.Rows.Clear();
+                return;
+            }
+
+            DateTime now = DateTime.Now;
+            string todayStr = now.ToString("yyyy-MM-dd");
+            DateTime weekAgo = now.AddDays(-7);
+
+            int todayTotalSeconds = 0;
+            int weeklyTotalSeconds = 0;
+            int maxFocusSeconds = 0;
+
+            // 최근 7일치 날짜 기본 틀 만들기 (그래프용)
+            Dictionary<string, int> dailyStudyMap = new Dictionary<string, int>();
+            for (int i = 6; i >= 0; i--)
+            {
+                dailyStudyMap[now.AddDays(-i).ToString("yyyy-MM-dd")] = 0;
+            }
+
+            // 2. 표(DataGridView) 설정 및 데이터 가공
+            dgvTimeRecords.Rows.Clear();
+            dgvTimeRecords.ColumnCount = 4;
+            dgvTimeRecords.Columns[0].Name = "날짜";
+            dgvTimeRecords.Columns[1].Name = "학습 구간";
+            dgvTimeRecords.Columns[2].Name = "순공 시간";
+            dgvTimeRecords.Columns[3].Name = "성과";
+
+            // 최신 기록이 위로 오도록 정렬
+            foreach (var item in logs.OrderByDescending(x => x.Value.sessionEnd))
+            {
+                var log = item.Value;
+                if (!DateTime.TryParse(log.sessionEnd, out DateTime endTime)) continue;
+
+                // 시작 시간 계산 (종료 시간 - 학습 시간)
+                DateTime startTime = endTime.AddSeconds(-log.sessionDuration);
+                string logDate = endTime.ToString("yyyy-MM-dd");
+
+                // [상단 요약] 데이터 합산
+                if (logDate == todayStr) todayTotalSeconds += log.sessionDuration;
+                if (endTime >= weekAgo) weeklyTotalSeconds += log.sessionDuration;
+                if (log.sessionDuration > maxFocusSeconds) maxFocusSeconds = log.sessionDuration;
+
+                // [그래프] 해당 날짜에 시간 누적
+                if (dailyStudyMap.ContainsKey(logDate))
+                {
+                    dailyStudyMap[logDate] += log.sessionDuration;
+                }
+
+                // [표] 한 줄 데이터 만들기
+                TimeSpan duration = TimeSpan.FromSeconds(log.sessionDuration);
+                string interval = $"{startTime:HH:mm} ~ {endTime:HH:mm}"; // 예: 14:00 ~ 15:30
+                string netTime = duration.Hours > 0 ? $"{duration.Hours}시간 {duration.Minutes}분" : $"{duration.Minutes}분 {duration.Seconds}초";
+
+                // 성과는 현재 세션 저장 로직 상 '학습 완료'로 기본 세팅 (추후 문제 풀이 수와 연동 가능)
+                dgvTimeRecords.Rows.Add(logDate, interval, netTime, "학습 완료");
+            }
+
+            // 3. 상단 요약(KPI) 라벨 텍스트 적용
+            if (lblTodayTotal != null)
+            {
+                TimeSpan tToday = TimeSpan.FromSeconds(todayTotalSeconds);
+                // 조건문을 없애고 항상 시간(h), 분(m), 초(s)를 출력하도록 변경
+                lblTodayTotal.Text = $"{tToday.Hours}h {tToday.Minutes}m {tToday.Seconds}s";
+            }
+
+            if (lblWeeklyAvg != null)
+            {
+                int avgSeconds = weeklyTotalSeconds / 7; // 7일 평균
+                TimeSpan tAvg = TimeSpan.FromSeconds(avgSeconds);
+                lblWeeklyAvg.Text = $"{tAvg.Hours}h {tAvg.Minutes}m {tAvg.Seconds}s";
+            }
+
+            if (lblMaxFocus != null)
+            {
+                TimeSpan tMax = TimeSpan.FromSeconds(maxFocusSeconds);
+                lblMaxFocus.Text = $"{tMax.Hours}h {tMax.Minutes}m {tMax.Seconds}s";
+            }
+
+            // 4. 그래프(Chart) 업데이트
+            if (chartTimeHistory != null)
+            {
+                chartTimeHistory.Series.Clear();
+                var series = chartTimeHistory.Series.Add("학습 시간(분)");
+
+                // 캡처하신 화면에 맞게 가로 막대(Bar)로 설정
+                series.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
+                series.Color = Color.CornflowerBlue; // 부드러운 파란색 (원하시면 색상 변경 가능)
+                series.IsValueShownAsLabel = true; // 막대 끝에 숫자(분) 표시
+
+                foreach (var kvp in dailyStudyMap)
+                {
+                    // "2026-05-06" 에서 "05-06"만 잘라서 Y축 글씨 겹침 방지
+                    string shortDate = kvp.Key.Substring(5);
+                    double minutes = Math.Round(kvp.Value / 60.0, 1);
+                    series.Points.AddXY(shortDate, minutes);
+                }
+            }
+        }
     }
 }

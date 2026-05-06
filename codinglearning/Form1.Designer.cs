@@ -29,9 +29,12 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea9 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend9 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series9 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea10 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend10 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series10 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
@@ -127,6 +130,22 @@
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.btnStopSession = new System.Windows.Forms.ToolStripStatusLabel();
             this.learningTimer = new System.Windows.Forms.Timer(this.components);
+            this.tabPage5 = new System.Windows.Forms.TabPage();
+            this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.chartTimeHistory = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.dgvTimeRecords = new System.Windows.Forms.DataGridView();
+            this.dataGridViewTextBoxColumn4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.groupBox15 = new System.Windows.Forms.GroupBox();
+            this.groupBox14 = new System.Windows.Forms.GroupBox();
+            this.lblMaxFocus = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
+            this.lblWeeklyAvg = new System.Windows.Forms.Label();
+            this.label22 = new System.Windows.Forms.Label();
+            this.lblTodayTotal = new System.Windows.Forms.Label();
+            this.label24 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -150,6 +169,12 @@
             ((System.ComponentModel.ISupportInitialize)(this.chartAccuracy)).BeginInit();
             this.groupBox11.SuspendLayout();
             this.statusStrip1.SuspendLayout();
+            this.tabPage5.SuspendLayout();
+            this.groupBox4.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.chartTimeHistory)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvTimeRecords)).BeginInit();
+            this.groupBox15.SuspendLayout();
+            this.groupBox14.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl1
@@ -159,7 +184,9 @@
             this.tabControl1.Controls.Add(this.tabPage2);
             this.tabControl1.Controls.Add(this.tabPage3);
             this.tabControl1.Controls.Add(this.tabPage4);
+            this.tabControl1.Controls.Add(this.tabPage5);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabControl1.Font = new System.Drawing.Font("맑은 고딕", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
@@ -172,10 +199,10 @@
             this.tabPage1.Controls.Add(this.groupBox3);
             this.tabPage1.Controls.Add(this.groupBox1);
             this.tabPage1.Controls.Add(this.groupBox2);
-            this.tabPage1.Location = new System.Drawing.Point(4, 28);
+            this.tabPage1.Location = new System.Drawing.Point(4, 35);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(1103, 618);
+            this.tabPage1.Size = new System.Drawing.Size(1103, 611);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "문제 탐색";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -196,7 +223,7 @@
             this.groupBox3.Font = new System.Drawing.Font("맑은 고딕", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.groupBox3.Location = new System.Drawing.Point(874, 10);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(215, 571);
+            this.groupBox3.Size = new System.Drawing.Size(215, 564);
             this.groupBox3.TabIndex = 3;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "선택된 문제";
@@ -242,7 +269,7 @@
             this.btnViewProblem.AutoSize = true;
             this.btnViewProblem.BackColor = System.Drawing.Color.White;
             this.btnViewProblem.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnViewProblem.Location = new System.Drawing.Point(11, 521);
+            this.btnViewProblem.Location = new System.Drawing.Point(11, 514);
             this.btnViewProblem.Name = "btnViewProblem";
             this.btnViewProblem.Size = new System.Drawing.Size(193, 35);
             this.btnViewProblem.TabIndex = 4;
@@ -253,7 +280,7 @@
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(12, 280);
+            this.label8.Location = new System.Drawing.Point(12, 273);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(44, 23);
             this.label8.TabIndex = 3;
@@ -262,7 +289,7 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(12, 241);
+            this.label7.Location = new System.Drawing.Point(12, 234);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(61, 23);
             this.label7.TabIndex = 2;
@@ -421,7 +448,7 @@
             this.groupBox2.Font = new System.Drawing.Font("맑은 고딕", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.groupBox2.Location = new System.Drawing.Point(15, 107);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(844, 474);
+            this.groupBox2.Size = new System.Drawing.Size(844, 467);
             this.groupBox2.TabIndex = 2;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "문제 목록";
@@ -445,7 +472,7 @@
             this.dgvProblems.ReadOnly = true;
             this.dgvProblems.RowHeadersWidth = 51;
             this.dgvProblems.RowTemplate.Height = 27;
-            this.dgvProblems.Size = new System.Drawing.Size(812, 425);
+            this.dgvProblems.Size = new System.Drawing.Size(812, 418);
             this.dgvProblems.TabIndex = 1;
             this.dgvProblems.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvProblems_CellClick);
             // 
@@ -489,10 +516,10 @@
             this.tabPage2.Controls.Add(this.tableLayoutPanel1);
             this.tabPage2.Controls.Add(this.groupBox7);
             this.tabPage2.Controls.Add(this.groupBox5);
-            this.tabPage2.Location = new System.Drawing.Point(4, 28);
+            this.tabPage2.Location = new System.Drawing.Point(4, 35);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(1103, 618);
+            this.tabPage2.Size = new System.Drawing.Size(1103, 611);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "코드 작성";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -512,7 +539,7 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 80F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 10F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1075, 395);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1075, 388);
             this.tableLayoutPanel1.TabIndex = 4;
             // 
             // groupBox8
@@ -520,9 +547,9 @@
             this.groupBox8.Controls.Add(this.txtResult);
             this.groupBox8.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBox8.Font = new System.Drawing.Font("맑은 고딕", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.groupBox8.Location = new System.Drawing.Point(3, 321);
+            this.groupBox8.Location = new System.Drawing.Point(3, 315);
             this.groupBox8.Name = "groupBox8";
-            this.groupBox8.Size = new System.Drawing.Size(1069, 71);
+            this.groupBox8.Size = new System.Drawing.Size(1069, 70);
             this.groupBox8.TabIndex = 10;
             this.groupBox8.TabStop = false;
             this.groupBox8.Text = "실행 결과";
@@ -534,7 +561,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtResult.Location = new System.Drawing.Point(13, 29);
             this.txtResult.Name = "txtResult";
-            this.txtResult.Size = new System.Drawing.Size(1043, 29);
+            this.txtResult.Size = new System.Drawing.Size(1043, 28);
             this.txtResult.TabIndex = 1;
             this.txtResult.Text = "";
             // 
@@ -545,7 +572,7 @@
             this.groupBox6.Font = new System.Drawing.Font("맑은 고딕", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.groupBox6.Location = new System.Drawing.Point(3, 3);
             this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Size = new System.Drawing.Size(1069, 302);
+            this.groupBox6.Size = new System.Drawing.Size(1069, 296);
             this.groupBox6.TabIndex = 7;
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "코드 작성";
@@ -557,7 +584,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtCode.Location = new System.Drawing.Point(13, 29);
             this.txtCode.Name = "txtCode";
-            this.txtCode.Size = new System.Drawing.Size(1039, 258);
+            this.txtCode.Size = new System.Drawing.Size(1039, 252);
             this.txtCode.TabIndex = 8;
             this.txtCode.Text = "";
             this.txtCode.Click += new System.EventHandler(this.txtCode_TextChanged);
@@ -724,10 +751,10 @@
             // 
             this.tabPage3.Controls.Add(this.groupBox10);
             this.tabPage3.Controls.Add(this.groupBox9);
-            this.tabPage3.Location = new System.Drawing.Point(4, 28);
+            this.tabPage3.Location = new System.Drawing.Point(4, 35);
             this.tabPage3.Name = "tabPage3";
             this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage3.Size = new System.Drawing.Size(1103, 618);
+            this.tabPage3.Size = new System.Drawing.Size(1103, 611);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "오답 목록";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -751,7 +778,7 @@
             this.groupBox10.Font = new System.Drawing.Font("맑은 고딕", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.groupBox10.Location = new System.Drawing.Point(843, 10);
             this.groupBox10.Name = "groupBox10";
-            this.groupBox10.Size = new System.Drawing.Size(246, 574);
+            this.groupBox10.Size = new System.Drawing.Size(246, 567);
             this.groupBox10.TabIndex = 1;
             this.groupBox10.TabStop = false;
             this.groupBox10.Text = "선택된 오답";
@@ -795,7 +822,7 @@
             // label12
             // 
             this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(10, 272);
+            this.label12.Location = new System.Drawing.Point(11, 265);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(44, 23);
             this.label12.TabIndex = 24;
@@ -804,7 +831,7 @@
             // label13
             // 
             this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(10, 233);
+            this.label13.Location = new System.Drawing.Point(11, 226);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(61, 23);
             this.label13.TabIndex = 23;
@@ -842,7 +869,7 @@
             this.btnSolveAgain.AutoSize = true;
             this.btnSolveAgain.BackColor = System.Drawing.Color.White;
             this.btnSolveAgain.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSolveAgain.Location = new System.Drawing.Point(127, 525);
+            this.btnSolveAgain.Location = new System.Drawing.Point(128, 518);
             this.btnSolveAgain.Name = "btnSolveAgain";
             this.btnSolveAgain.Size = new System.Drawing.Size(105, 35);
             this.btnSolveAgain.TabIndex = 6;
@@ -855,7 +882,7 @@
             this.btnViewWrongProblem.AutoSize = true;
             this.btnViewWrongProblem.BackColor = System.Drawing.Color.White;
             this.btnViewWrongProblem.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnViewWrongProblem.Location = new System.Drawing.Point(13, 525);
+            this.btnViewWrongProblem.Location = new System.Drawing.Point(14, 518);
             this.btnViewWrongProblem.Name = "btnViewWrongProblem";
             this.btnViewWrongProblem.Size = new System.Drawing.Size(105, 35);
             this.btnViewWrongProblem.TabIndex = 5;
@@ -866,7 +893,7 @@
             // label28
             // 
             this.label28.AutoSize = true;
-            this.label28.Location = new System.Drawing.Point(10, 480);
+            this.label28.Location = new System.Drawing.Point(11, 473);
             this.label28.Name = "label28";
             this.label28.Size = new System.Drawing.Size(44, 23);
             this.label28.TabIndex = 3;
@@ -881,7 +908,7 @@
             this.groupBox9.Font = new System.Drawing.Font("맑은 고딕", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.groupBox9.Location = new System.Drawing.Point(13, 10);
             this.groupBox9.Name = "groupBox9";
-            this.groupBox9.Size = new System.Drawing.Size(813, 574);
+            this.groupBox9.Size = new System.Drawing.Size(813, 567);
             this.groupBox9.TabIndex = 0;
             this.groupBox9.TabStop = false;
             this.groupBox9.Text = "오답 문제 목록";
@@ -906,7 +933,7 @@
             this.dgvWrongList.ReadOnly = true;
             this.dgvWrongList.RowHeadersWidth = 51;
             this.dgvWrongList.RowTemplate.Height = 27;
-            this.dgvWrongList.Size = new System.Drawing.Size(786, 531);
+            this.dgvWrongList.Size = new System.Drawing.Size(786, 524);
             this.dgvWrongList.TabIndex = 0;
             this.dgvWrongList.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvWrongList_CellClick);
             // 
@@ -957,12 +984,12 @@
             this.tabPage4.Controls.Add(this.groupBox13);
             this.tabPage4.Controls.Add(this.groupBox12);
             this.tabPage4.Controls.Add(this.groupBox11);
-            this.tabPage4.Location = new System.Drawing.Point(4, 28);
+            this.tabPage4.Location = new System.Drawing.Point(4, 35);
             this.tabPage4.Name = "tabPage4";
             this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage4.Size = new System.Drawing.Size(1103, 618);
+            this.tabPage4.Size = new System.Drawing.Size(1103, 611);
             this.tabPage4.TabIndex = 3;
-            this.tabPage4.Text = "통계/그래프";
+            this.tabPage4.Text = "문제 풀이 통계/그래프";
             this.tabPage4.UseVisualStyleBackColor = true;
             // 
             // groupBox13
@@ -971,7 +998,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox13.Controls.Add(this.dgvRecentRecords);
             this.groupBox13.Font = new System.Drawing.Font("맑은 고딕", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.groupBox13.Location = new System.Drawing.Point(14, 418);
+            this.groupBox13.Location = new System.Drawing.Point(14, 411);
             this.groupBox13.Name = "groupBox13";
             this.groupBox13.Size = new System.Drawing.Size(1076, 166);
             this.groupBox13.TabIndex = 2;
@@ -1036,7 +1063,7 @@
             this.groupBox12.Font = new System.Drawing.Font("맑은 고딕", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.groupBox12.Location = new System.Drawing.Point(14, 97);
             this.groupBox12.Name = "groupBox12";
-            this.groupBox12.Size = new System.Drawing.Size(1076, 310);
+            this.groupBox12.Size = new System.Drawing.Size(1076, 303);
             this.groupBox12.TabIndex = 1;
             this.groupBox12.TabStop = false;
             this.groupBox12.Text = "정답률 그래프";
@@ -1046,18 +1073,18 @@
             this.chartAccuracy.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            chartArea1.Name = "ChartArea1";
-            this.chartAccuracy.ChartAreas.Add(chartArea1);
-            legend1.Name = "Legend1";
-            this.chartAccuracy.Legends.Add(legend1);
+            chartArea9.Name = "ChartArea1";
+            this.chartAccuracy.ChartAreas.Add(chartArea9);
+            legend9.Name = "Legend1";
+            this.chartAccuracy.Legends.Add(legend9);
             this.chartAccuracy.Location = new System.Drawing.Point(15, 29);
             this.chartAccuracy.Name = "chartAccuracy";
-            series1.ChartArea = "ChartArea1";
-            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
-            series1.Legend = "Legend1";
-            series1.Name = "Series1";
-            this.chartAccuracy.Series.Add(series1);
-            this.chartAccuracy.Size = new System.Drawing.Size(1046, 263);
+            series9.ChartArea = "ChartArea1";
+            series9.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
+            series9.Legend = "Legend1";
+            series9.Name = "Series1";
+            this.chartAccuracy.Series.Add(series9);
+            this.chartAccuracy.Size = new System.Drawing.Size(1046, 256);
             this.chartAccuracy.TabIndex = 0;
             this.chartAccuracy.Text = "chart1";
             // 
@@ -1152,8 +1179,7 @@
             // lblStatus
             // 
             this.lblStatus.Name = "lblStatus";
-            this.lblStatus.Size = new System.Drawing.Size(113, 23);
-            this.lblStatus.Text = "🟢 학습 대기";
+            this.lblStatus.Size = new System.Drawing.Size(0, 23);
             // 
             // lblTimer
             // 
@@ -1185,6 +1211,184 @@
             // 
             this.learningTimer.Interval = 1000;
             this.learningTimer.Tick += new System.EventHandler(this.learningTimer_Tick);
+            // 
+            // tabPage5
+            // 
+            this.tabPage5.Controls.Add(this.groupBox14);
+            this.tabPage5.Controls.Add(this.groupBox15);
+            this.tabPage5.Controls.Add(this.groupBox4);
+            this.tabPage5.Location = new System.Drawing.Point(4, 35);
+            this.tabPage5.Name = "tabPage5";
+            this.tabPage5.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage5.Size = new System.Drawing.Size(1103, 611);
+            this.tabPage5.TabIndex = 4;
+            this.tabPage5.Text = "학습 시간 통계/그래프";
+            this.tabPage5.UseVisualStyleBackColor = true;
+            // 
+            // groupBox4
+            // 
+            this.groupBox4.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox4.Controls.Add(this.chartTimeHistory);
+            this.groupBox4.Font = new System.Drawing.Font("맑은 고딕", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.groupBox4.Location = new System.Drawing.Point(13, 98);
+            this.groupBox4.Name = "groupBox4";
+            this.groupBox4.Size = new System.Drawing.Size(1076, 303);
+            this.groupBox4.TabIndex = 4;
+            this.groupBox4.TabStop = false;
+            this.groupBox4.Text = "학습 시간 그래프";
+            // 
+            // chartTimeHistory
+            // 
+            this.chartTimeHistory.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            chartArea10.Name = "ChartArea1";
+            this.chartTimeHistory.ChartAreas.Add(chartArea10);
+            legend10.Name = "Legend1";
+            this.chartTimeHistory.Legends.Add(legend10);
+            this.chartTimeHistory.Location = new System.Drawing.Point(15, 29);
+            this.chartTimeHistory.Name = "chartTimeHistory";
+            series10.ChartArea = "ChartArea1";
+            series10.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
+            series10.Legend = "Legend1";
+            series10.Name = "Series1";
+            this.chartTimeHistory.Series.Add(series10);
+            this.chartTimeHistory.Size = new System.Drawing.Size(1046, 256);
+            this.chartTimeHistory.TabIndex = 0;
+            this.chartTimeHistory.Text = "chart1";
+            // 
+            // dgvTimeRecords
+            // 
+            this.dgvTimeRecords.AllowUserToAddRows = false;
+            this.dgvTimeRecords.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dgvTimeRecords.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.dgvTimeRecords.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvTimeRecords.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.dataGridViewTextBoxColumn1,
+            this.dataGridViewTextBoxColumn2,
+            this.dataGridViewTextBoxColumn3,
+            this.dataGridViewTextBoxColumn4});
+            this.dgvTimeRecords.Location = new System.Drawing.Point(16, 29);
+            this.dgvTimeRecords.Name = "dgvTimeRecords";
+            this.dgvTimeRecords.ReadOnly = true;
+            this.dgvTimeRecords.RowHeadersWidth = 51;
+            this.dgvTimeRecords.RowTemplate.Height = 27;
+            this.dgvTimeRecords.Size = new System.Drawing.Size(1046, 119);
+            this.dgvTimeRecords.TabIndex = 0;
+            // 
+            // dataGridViewTextBoxColumn4
+            // 
+            this.dataGridViewTextBoxColumn4.HeaderText = "성과";
+            this.dataGridViewTextBoxColumn4.MinimumWidth = 6;
+            this.dataGridViewTextBoxColumn4.Name = "dataGridViewTextBoxColumn4";
+            this.dataGridViewTextBoxColumn4.ReadOnly = true;
+            // 
+            // dataGridViewTextBoxColumn3
+            // 
+            this.dataGridViewTextBoxColumn3.HeaderText = "순공 시간";
+            this.dataGridViewTextBoxColumn3.MinimumWidth = 6;
+            this.dataGridViewTextBoxColumn3.Name = "dataGridViewTextBoxColumn3";
+            this.dataGridViewTextBoxColumn3.ReadOnly = true;
+            // 
+            // dataGridViewTextBoxColumn2
+            // 
+            this.dataGridViewTextBoxColumn2.HeaderText = "학습 구간";
+            this.dataGridViewTextBoxColumn2.MinimumWidth = 6;
+            this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
+            this.dataGridViewTextBoxColumn2.ReadOnly = true;
+            // 
+            // dataGridViewTextBoxColumn1
+            // 
+            this.dataGridViewTextBoxColumn1.HeaderText = "날짜";
+            this.dataGridViewTextBoxColumn1.MinimumWidth = 6;
+            this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
+            this.dataGridViewTextBoxColumn1.ReadOnly = true;
+            // 
+            // groupBox15
+            // 
+            this.groupBox15.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox15.Controls.Add(this.dgvTimeRecords);
+            this.groupBox15.Font = new System.Drawing.Font("맑은 고딕", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.groupBox15.Location = new System.Drawing.Point(13, 412);
+            this.groupBox15.Name = "groupBox15";
+            this.groupBox15.Size = new System.Drawing.Size(1076, 164);
+            this.groupBox15.TabIndex = 5;
+            this.groupBox15.TabStop = false;
+            this.groupBox15.Text = "학습 시간 기록";
+            // 
+            // groupBox14
+            // 
+            this.groupBox14.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox14.Controls.Add(this.lblMaxFocus);
+            this.groupBox14.Controls.Add(this.label11);
+            this.groupBox14.Controls.Add(this.lblWeeklyAvg);
+            this.groupBox14.Controls.Add(this.label22);
+            this.groupBox14.Controls.Add(this.lblTodayTotal);
+            this.groupBox14.Controls.Add(this.label24);
+            this.groupBox14.Font = new System.Drawing.Font("맑은 고딕", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.groupBox14.Location = new System.Drawing.Point(13, 11);
+            this.groupBox14.Name = "groupBox14";
+            this.groupBox14.Size = new System.Drawing.Size(1076, 76);
+            this.groupBox14.TabIndex = 6;
+            this.groupBox14.TabStop = false;
+            this.groupBox14.Text = "학습 시간 요약";
+            // 
+            // lblMaxFocus
+            // 
+            this.lblMaxFocus.AutoSize = true;
+            this.lblMaxFocus.Location = new System.Drawing.Point(801, 36);
+            this.lblMaxFocus.Name = "lblMaxFocus";
+            this.lblMaxFocus.Size = new System.Drawing.Size(0, 23);
+            this.lblMaxFocus.TabIndex = 5;
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(671, 36);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(124, 23);
+            this.label11.TabIndex = 4;
+            this.label11.Text = "최장 집중 시간";
+            // 
+            // lblWeeklyAvg
+            // 
+            this.lblWeeklyAvg.AutoSize = true;
+            this.lblWeeklyAvg.Location = new System.Drawing.Point(518, 36);
+            this.lblWeeklyAvg.Name = "lblWeeklyAvg";
+            this.lblWeeklyAvg.Size = new System.Drawing.Size(0, 23);
+            this.lblWeeklyAvg.TabIndex = 3;
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Location = new System.Drawing.Point(348, 36);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(164, 23);
+            this.label22.TabIndex = 2;
+            this.label22.Text = "주간 평균 학습 시간";
+            // 
+            // lblTodayTotal
+            // 
+            this.lblTodayTotal.AutoSize = true;
+            this.lblTodayTotal.Location = new System.Drawing.Point(182, 36);
+            this.lblTodayTotal.Name = "lblTodayTotal";
+            this.lblTodayTotal.Size = new System.Drawing.Size(0, 23);
+            this.lblTodayTotal.TabIndex = 1;
+            // 
+            // label24
+            // 
+            this.label24.AutoSize = true;
+            this.label24.Location = new System.Drawing.Point(12, 35);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(164, 23);
+            this.label24.TabIndex = 0;
+            this.label24.Text = "오늘의 총 학습 시간";
             // 
             // Form1
             // 
@@ -1227,6 +1431,13 @@
             this.groupBox11.PerformLayout();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
+            this.tabPage5.ResumeLayout(false);
+            this.groupBox4.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.chartTimeHistory)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvTimeRecords)).EndInit();
+            this.groupBox15.ResumeLayout(false);
+            this.groupBox14.ResumeLayout(false);
+            this.groupBox14.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1329,6 +1540,22 @@
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.ToolStripStatusLabel btnStopSession;
+        private System.Windows.Forms.TabPage tabPage5;
+        private System.Windows.Forms.GroupBox groupBox14;
+        private System.Windows.Forms.Label lblMaxFocus;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.Label lblWeeklyAvg;
+        private System.Windows.Forms.Label label22;
+        private System.Windows.Forms.Label lblTodayTotal;
+        private System.Windows.Forms.Label label24;
+        private System.Windows.Forms.GroupBox groupBox15;
+        private System.Windows.Forms.DataGridView dgvTimeRecords;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn4;
+        private System.Windows.Forms.GroupBox groupBox4;
+        private System.Windows.Forms.DataVisualization.Charting.Chart chartTimeHistory;
     }
 }
 
