@@ -8,10 +8,10 @@ using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using System.IO; // 파일 저장을 위해 추가
 using System.Diagnostics; // 백그라운드에서 cmd 명령어를 실행하기 위해 필요
 using System.Text;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace codinglearning
 {
@@ -24,6 +24,10 @@ namespace codinglearning
 
         // 2. 현재 선택된 문제 정보
         private string selId = "", selTitle = "", selDiff = "", selTags = "";
+
+        // ⭐ 추가할 스위치 변수들 (중복 클릭 방지용)
+        private bool isSearching = false;
+        private bool isRunningSample = false;
 
         public Form1()
         {
@@ -59,7 +63,7 @@ namespace codinglearning
             // 2. 탭 컨트롤 우측 상단(빈 공간)으로 위치(좌표) 계산해서 이동시키기
             // X좌표: 탭컨트롤 전체 넓이 - 라벨 넓이 - 우측 여백(10)
             // Y좌표: 위에서부터 5픽셀 아래 (탭 헤더 쪽에 예쁘게 걸침)
-            lblDarkMode.Location = new Point(tabControl1.Width - lblDarkMode.Width - 18, 8);
+            lblDarkMode.Location = new Point(tabControl1.Width - lblDarkMode.Width - 15, 3);
 
             // 3. 탭 컨트롤 지붕 위에서 맨 앞으로 튀어나오게 하기
             lblDarkMode.BringToFront();
@@ -69,6 +73,9 @@ namespace codinglearning
 
             // 5. 라벨 배경을 투명하게 해서 탭 컨트롤 배경에 자연스럽게 스며들게 하기
             lblDarkMode.BackColor = Color.Transparent;
+
+            // 탭 컨트롤을 직접 그리겠다는 설정
+            tabControl1.DrawMode = TabDrawMode.OwnerDrawFixed;
         }
 
         private void learningTimer_Tick(object sender, EventArgs e)
@@ -86,25 +93,30 @@ namespace codinglearning
         // 매개변수를 없애고 sessionManager의 상태를 기준으로 UI를 업데이트하도록 통합
         private void UpdateStatusUI()
         {
+            // ⭐ 다크 모드일 때는 눈에 확 띄는 밝은(파스텔/네온) 색상 사용!
+            Color activeColor = isDarkMode ? Color.LimeGreen : Color.Green;
+            Color idleColor = isDarkMode ? Color.Gold : Color.Orange;
+            Color breakColor = isDarkMode ? Color.LightCoral : Color.Crimson;
+
             if (sessionManager.CurrentStatus == "Active")
             {
                 lblStatus.Text = "▶ 학습 중";
-                lblStatus.ForeColor = Color.Green; // 초록색
-                lblTimer.ForeColor = Color.Green;  // 타이머도 같이 초록색
+                lblStatus.ForeColor = activeColor;
+                lblTimer.ForeColor = activeColor;
                 btnStopSession.Text = "⏹ 세션 종료";
             }
             else if (sessionManager.CurrentStatus == "Idle")
             {
                 lblStatus.Text = "Ⅱ 잠깐 쉬는 중";
-                lblStatus.ForeColor = Color.Orange; // 주황색
-                lblTimer.ForeColor = Color.Orange;  // 타이머도 같이 주황색
+                lblStatus.ForeColor = idleColor;
+                lblTimer.ForeColor = idleColor;
                 btnStopSession.Text = "⏹ 세션 종료";
             }
             else // "Break" 상태
             {
                 lblStatus.Text = "■ 휴식 중";
-                lblStatus.ForeColor = Color.Crimson; // 약간 어두운 빨간색
-                lblTimer.ForeColor = Color.Crimson;  // 타이머도 같이 빨간색
+                lblStatus.ForeColor = breakColor;
+                lblTimer.ForeColor = breakColor;
                 btnStopSession.Text = "▶ 세션 시작";
             }
         }
@@ -185,8 +197,17 @@ namespace codinglearning
 
         private async Task PerformSearch(string keyword, string minDiffStr, string maxDiffStr)
         {
+            // ⭐ 방어막: 이미 검색 중이면 아무것도 안 하고 튕겨냄 (버튼 비활성화 대신 사용)
+            if (isSearching) return;
+            
+            isSearching = true; // 검색 시작 상태로 변경
+
             sessionManager.RecordUserAction();
-            btnSearch.Enabled = false; btnSearch.Text = "검색중...";
+
+            // 버튼 텍스트 변경 및 글자색 하얗게 강제 유지!
+            btnSearch.Text = "검색 중...";
+            btnSearch.ForeColor = isDarkMode ? Color.White : SystemColors.ControlText;
+            btnSearch.Refresh();
 
             try
             {
@@ -231,7 +252,9 @@ namespace codinglearning
             }
             finally
             {
-                btnSearch.Enabled = true; btnSearch.Text = "검색";
+                // ⭐ 검색이 끝나면 스위치를 끄고 텍스트 원상복구
+                isSearching = false;
+                btnSearch.Text = "검색";
             }
         }
 
@@ -285,21 +308,32 @@ namespace codinglearning
 
         private async void btnRunSample_Click(object sender, EventArgs e)
         {
+            // ⭐ 방어막: 이미 채점 중이면 무시
+            if (isRunningSample) return;
+
             sessionManager.RecordUserAction();
+
             if (string.IsNullOrEmpty(selId))
             {
                 MessageBox.Show("먼저 문제를 선택해주세요!");
                 return;
             }
 
-            btnRunSample.Enabled = false; txtResult.Text = "Judge0 서버에 채점 요청 중...";
+            isRunningSample = true; // 채점 시작!
+
+            // 버튼 텍스트 변경 및 글자색 강제 유지
+            btnRunSample.Text = "실행 중...";
+            btnRunSample.ForeColor = isDarkMode ? Color.White : SystemColors.ControlText;
+            btnRunSample.Refresh();
+
+            txtResult.Text = "Judge0 서버에 채점 요청 중...";
 
             try
             {
                 var (isCorrect, message) = await apiService.RunJudge0Async(txtCode.Text, cbLanguage.SelectedItem.ToString());
                 txtResult.Text = message;
 
-                // 정답/오답 상관없이 무조건 저장 메서드 실행 (isCorrect 결과를 함께 넘겨줌)
+                // 정답/오답 상관없이 무조건 저장 메서드 실행
                 SaveCodeToLocalFile(selId, selTitle, txtCode.Text, cbLanguage.SelectedItem.ToString(), isCorrect);
 
                 var record = new SubmissionRecord
@@ -319,7 +353,9 @@ namespace codinglearning
             }
             finally
             {
-                btnRunSample.Enabled = true;
+                // ⭐ 실행이 끝나면 스위치를 끄고 텍스트 원상복구
+                isRunningSample = false;
+                btnRunSample.Text = "예제 테스트 실행";
             }
         }
 
@@ -1007,71 +1043,243 @@ if __name__ == '__main__':
             ApplyTheme();
         }
 
+        private void tabControl1_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            // 1. 배경을 폼 배경색으로 싹 덮어서 윈폼 특유의 못생긴 테두리를 지워버림
+            Color formBgColor = isDarkMode ? Color.FromArgb(30, 30, 30) : SystemColors.Control;
+
+            // 그림 그릴 영역을 살짝 넓혀서 빈틈없이 칠하기!
+            Rectangle bgRect = e.Bounds;
+            bgRect.Inflate(2, 2);
+            e.Graphics.FillRectangle(new SolidBrush(formBgColor), bgRect);
+
+            // 2. 현재 탭이 선택되었는지 확인
+            bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
+
+            // 3. 탭 버튼 색상 설정 (선택된 건 밝게, 안 선택된 건 배경에 스며들게)
+            Color tabColor = isDarkMode
+                ? (isSelected ? Color.FromArgb(60, 60, 65) : formBgColor)
+                : (isSelected ? Color.White : SystemColors.Control);
+
+            Color textColor = isDarkMode
+                ? (isSelected ? Color.White : Color.Gray)
+                : SystemColors.ControlText;
+
+            // 4. 탭 버튼 안쪽 예쁘게 칠하기
+            Rectangle tabRect = e.Bounds;
+            tabRect.Inflate(-1, -1); // 안쪽으로 살짝 줄여서 예쁜 여백 생성
+            e.Graphics.FillRectangle(new SolidBrush(tabColor), tabRect);
+
+            // 5. 글자 쓰기
+            string tabText = tabControl1.TabPages[e.Index].Text;
+            TextRenderer.DrawText(e.Graphics, tabText, e.Font, tabRect, textColor, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
+        }
+
+        private Panel tabCoverPanel; // 탭 컨트롤 빈 공간을 덮어버릴 가짜 패널
         private bool isDarkMode = false; // 현재 다크 모드인지 기억하는 변수
 
         // 🎨 테마(다크/라이트)를 적용하는 메서드
         private void ApplyTheme()
         {
-            // 다크모드용 세련된 색상 팔레트 (원하는 색으로 조정 가능!)
-            Color bgColor = isDarkMode ? Color.FromArgb(30, 30, 30) : SystemColors.Control;
-            Color textColor = isDarkMode ? Color.White : SystemColors.ControlText;
-            Color boxColor = isDarkMode ? Color.FromArgb(45, 45, 48) : Color.White;
+            // --- 1. 색상 정의 (눈이 편안한 소프트 다크 팔레트) ---
+            // 완전 까만색(0,0,0)과 완전 흰색(255,255,255)은 절대 피합니다!
 
-            // 1. 폼 전체 기본 배경/글자색 변경
+            Color bgColor = isDarkMode ? Color.FromArgb(30, 30, 30) : SystemColors.Control;       // 부드러운 다크 그레이 (눈부심 방지)
+            Color textColor = isDarkMode ? Color.FromArgb(212, 212, 212) : SystemColors.ControlText; // 쨍하지 않은 은은한 오프화이트(회백색)
+            Color boxColor = isDarkMode ? Color.FromArgb(37, 37, 38) : Color.White;               // 폼 배경보다 아주 살짝 밝은 상자 배경
+            Color gridLineColor = isDarkMode ? Color.FromArgb(63, 63, 70) : Color.LightGray;      // 거슬리지 않는 은은한 격자선
+
+            // ⭐ 포인트 컬러 (형광 연두색 대신, 눈이 편안한 VS Code 스타일의 파스텔 블루)
+            Color accentColor = isDarkMode ? Color.FromArgb(86, 156, 214) : Color.SteelBlue;
+
+            // --- 2. 폼 전체 기본 설정 ---
             this.BackColor = bgColor;
             this.ForeColor = textColor;
 
-            // 2. 폼 안의 모든 부품(컨트롤) 색상 싹 다 바꾸기
-            ChangeControlColors(this, bgColor, textColor, boxColor);
+            // --- 3. 탭 컨트롤 특별 대우 ---
+            tabControl1.Appearance = TabAppearance.Normal;
+            tabControl1.BackColor = bgColor;
 
-            // ⭐ 3. 아까 만든 잔디심기 라벨 보호색도 현재 테마 배경색에 맞춰주기
-            if (lblGitHubPush != null)
+            // ⭐ 윈폼의 고집불통 하얀 띠를 덮어버리는 '가짜 배경 패널' 마법!
+            if (tabCoverPanel == null)
             {
-                lblGitHubPush.BackColor = bgColor;
+                tabCoverPanel = new Panel();
+                this.Controls.Add(tabCoverPanel);
             }
+
+            // 마지막 탭(학습 시간 통계)의 위치와 크기 정보를 가져옵니다.
+            Rectangle lastTab = tabControl1.GetTabRect(tabControl1.TabCount - 1);
+
+            // 1. 패널 색상을 폼 배경색(리얼 블랙)과 똑같이 칠하기
+            tabCoverPanel.BackColor = bgColor;
+
+            // 2. 위치: 마지막 탭의 오른쪽 끝에서부터 시작
+            tabCoverPanel.Location = new Point(tabControl1.Left + lastTab.Right, tabControl1.Top);
+
+            // 3. 크기: 오른쪽 끝까지 꽉 채우고, 높이는 탭 버튼 높이만큼 딱 맞게!
+            tabCoverPanel.Size = new Size(tabControl1.Width - lastTab.Right, lastTab.Bottom);
+
+            // 4. 창 크기를 조절해도 오른쪽 끝까지 쫙쫙 늘어나도록 닻(Anchor) 내리기
+            tabCoverPanel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
+            // 5. 하얀 띠를 완벽하게 덮어버림
+            tabCoverPanel.BringToFront();
+
+            // 6. 다크모드 버튼이 패널 밑에 깔리지 않게 맨 위로 구조해줌!
+            lblDarkMode.BringToFront();
+
+            // --- 4. 모든 부품색 변경 마법 실행 ---
+            ChangeControlColors(this, bgColor, textColor, boxColor, gridLineColor, accentColor);
         }
 
         // 🔍 폼 안의 부품들을 파고들며 색상을 칠해주는 재귀 메서드 (이름 충돌 방지 완벽 적용)
-        private void ChangeControlColors(Control parent, Color bg, Color text, Color box)
+        private void ChangeControlColors(Control parent, Color bg, Color text, Color box, Color gridLine, Color accent)
         {
             foreach (Control c in parent.Controls)
             {
-                // 탭 컨트롤 안의 페이지 배경색
-                if (c is TabPage)
+                // ⭐ 핵심: 라벨은 배경을 투명하게 해서 글자만 띄우고, 글자는 흰색으로!
+                if (c is Label || c is CheckBox)
+                {
+                    c.BackColor = Color.Transparent; // 배경 투명
+                    c.ForeColor = text;              // 글자는 흰색! (지금 안보이는 문제 해결)
+                }
+                else
                 {
                     c.BackColor = bg;
                     c.ForeColor = text;
                 }
-                // 코드 입력창, 콤보박스 등 입력란
-                else if (c is System.Windows.Forms.TextBox || c is System.Windows.Forms.ComboBox)
+
+                // --- 부품별 세부 성형 수술 ---
+
+                // 1. 학습 시간 띄우는 라벨 (강조)
+                if (c.Name == "lblStudyTime")
                 {
-                    c.BackColor = box;
-                    c.ForeColor = text;
-                    // 테두리가 있는 컨트롤은 스타일을 살짝 바꿔주면 더 예쁨
-                    if (c is System.Windows.Forms.TextBox tb) tb.BorderStyle = isDarkMode ? BorderStyle.FixedSingle : BorderStyle.Fixed3D;
+                    c.Font = new Font(c.Font.FontFamily, 24, FontStyle.Bold); // 글자 크기 확 키우기
+                    c.ForeColor = accent; // ⭐ 포인트 컬러 (연두색) 적용! 눈에 확 띔
+                    continue; // 아래 공통 라벨 코드 건너뛰기
                 }
-                // 오답노트, 기록 등의 표(DataGridView)
-                else if (c is System.Windows.Forms.DataGridView dgv)
+
+                // 2. 입력창 (TextBox, ComboBox) - 버튼과 동일한 색상 적용!
+                if (c is TextBox || c is ComboBox)
+                {
+                    if (isDarkMode)
+                    {
+                        // 버튼과 똑같은 톤으로 맞춰서 입력란의 존재감을 확실하게 살림
+                        c.BackColor = Color.FromArgb(60, 60, 65);
+                        c.ForeColor = Color.White;
+                    }
+                    else
+                    {
+                        c.BackColor = box;
+                        c.ForeColor = text;
+                    }
+
+                    if (c is ComboBox cb)
+                    {
+                        cb.FlatStyle = FlatStyle.Flat; // 콤보박스 테두리 다이어트
+                    }
+                    if (c is TextBox tb)
+                    {
+                        tb.BorderStyle = isDarkMode ? BorderStyle.FixedSingle : BorderStyle.Fixed3D;
+                    }
+                }
+
+                // 3. 표 (DataGridView)
+                else if (c is DataGridView dgv)
                 {
                     dgv.BackgroundColor = box;
                     dgv.DefaultCellStyle.BackColor = box;
                     dgv.DefaultCellStyle.ForeColor = text;
-
-                    // 표 머리글(제목) 색상도 변경 허용
+                    dgv.GridColor = gridLine;
                     dgv.EnableHeadersVisualStyles = false;
-                    dgv.ColumnHeadersDefaultCellStyle.BackColor = isDarkMode ? Color.FromArgb(60, 60, 60) : SystemColors.Control;
+                    dgv.ColumnHeadersDefaultCellStyle.BackColor = isDarkMode ? Color.FromArgb(50, 50, 50) : SystemColors.Control;
                     dgv.ColumnHeadersDefaultCellStyle.ForeColor = text;
                 }
-                // 라벨, 체크박스 등 글자만 있는 것들
-                else if (c is System.Windows.Forms.Label || c is System.Windows.Forms.CheckBox)
+
+                // 4. 그래프 (Chart) - 그라데이션 제거 & 눈이 편안한 단색 적용 ⭐
+                else if (c is Chart chart)
                 {
+                    chart.BackColor = bg;
+                    if (chart.Titles.Count > 0) chart.Titles[0].ForeColor = text;
+                    if (chart.Legends.Count > 0)
+                    {
+                        chart.Legends[0].BackColor = Color.Transparent;
+                        chart.Legends[0].ForeColor = text;
+                    }
+
+                    foreach (var area in chart.ChartAreas)
+                    {
+                        area.BackColor = box;
+                        area.AxisX.LabelStyle.ForeColor = text;
+                        area.AxisY.LabelStyle.ForeColor = text;
+                        area.AxisX.MajorGrid.LineColor = gridLine;
+                        area.AxisY.MajorGrid.LineColor = gridLine;
+                        area.AxisX.LineColor = gridLine;
+                        area.AxisY.LineColor = gridLine;
+                    }
+
+                    // ⭐ 그라데이션 없애고, 눈이 편안한 파스텔톤 단색으로 세팅!
+                    if (chart.Series.Count > 0)
+                    {
+                        chart.Series[0].BackGradientStyle = GradientStyle.None; // 그라데이션 완전 제거
+                                                                                // 첫 번째 막대(풀이 수 등): 차분하고 고급스러운 파스텔 블루
+                        chart.Series[0].Color = isDarkMode ? Color.FromArgb(86, 156, 214) : Color.SteelBlue;
+
+                        // 만약 시리즈가 2개 이상(정답/오답 등)이라면 두 번째 색상도 지정
+                        if (chart.Series.Count > 1)
+                        {
+                            chart.Series[1].BackGradientStyle = GradientStyle.None;
+                            // 두 번째 막대(오답 등): 거슬리지 않는 차분한 코랄 핑크
+                            chart.Series[1].Color = isDarkMode ? Color.FromArgb(206, 145, 120) : Color.IndianRed;
+                        }
+                    }
+                }
+
+                // 5. 그룹박스, 패널
+                else if (c is GroupBox || c is Panel)
+                {
+                    c.BackColor = bg;
                     c.ForeColor = text;
                 }
 
-                // 패널이나 탭 컨트롤 안에 부품이 더 들어있으면 파고들어가서 변경!
+                // 6. 버튼 (투명 버튼 적용 안 된 일반 버튼들)
+                else if (c is Button btn && c.Name != "btnGitHubPush")
+                {
+                    if (isDarkMode)
+                    {
+                        btn.FlatStyle = FlatStyle.Flat;
+                        // 1. 테두리를 주변 배경보다 살짝 밝게 해서 윤곽선을 확실히 살려줍니다.
+                        btn.FlatAppearance.BorderColor = Color.FromArgb(85, 85, 90);
+
+                        // 2. 버튼 배경을 폼 배경(30,30,30)보다 확실히 밝은 톤으로 올려서 버튼처럼 보이게!
+                        btn.BackColor = Color.FromArgb(60, 60, 65);
+                        btn.ForeColor = Color.White;
+
+                        // ⭐ 3. 마우스 올렸을 때(Hover) 은은한 스틸 블루 색상으로 빛나게 하기!
+                        btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(70, 100, 130);
+
+                        // ⭐ 4. 클릭하는 순간(Down) 쨍한 액센트 컬러(파스텔 블루)로 반응!
+                        btn.FlatAppearance.MouseDownBackColor = accent;
+                    }
+                    else
+                    {
+                        // 라이트 모드일 때의 기본 버튼 스타일
+                        btn.FlatStyle = FlatStyle.Standard;
+                        btn.BackColor = SystemColors.Control;
+                        btn.ForeColor = SystemColors.ControlText;
+                    }
+                }
+
+                // 7. 하단 상태 표시줄 (StatusStrip) 배경색 맞추기
+                else if (c is StatusStrip statusStrip)
+                {
+                    statusStrip.BackColor = isDarkMode ? Color.FromArgb(20, 20, 20) : SystemColors.Control;
+                }
+
+                // 재귀 호출
                 if (c.HasChildren)
                 {
-                    ChangeControlColors(c, bg, text, box);
+                    ChangeControlColors(c, bg, text, box, gridLine, accent);
                 }
             }
         }
