@@ -76,6 +76,9 @@ namespace codinglearning
 
             // 탭 컨트롤을 직접 그리겠다는 설정
             tabControl1.DrawMode = TabDrawMode.OwnerDrawFixed;
+
+            // ⭐ 프로그램 시작하자마자 예쁜 커스텀 테마(라이트 모드) 덮어씌우기!
+            ApplyTheme();
         }
 
         private void learningTimer_Tick(object sender, EventArgs e)
@@ -573,9 +576,9 @@ namespace codinglearning
                 chartAccuracy.Series[0].Points.AddXY("정답", correctCount);
                 chartAccuracy.Series[0].Points.AddXY("오답", wrongCount);
 
-                // 1. 차트 막대 색상 지정 (뮤트 톤)
-                Color correctColor = Color.FromArgb(143, 188, 143);
-                Color wrongColor = Color.FromArgb(224, 159, 150);
+                // 1. 차트 막대 색상 지정 (다크 모드 상태 확인 후 톤다운 적용!)
+                Color correctColor = isDarkMode ? Color.FromArgb(90, 130, 90) : Color.FromArgb(143, 188, 143);
+                Color wrongColor = isDarkMode ? Color.FromArgb(160, 90, 90) : Color.FromArgb(224, 159, 150);
 
                 chartAccuracy.Series[0].Points[0].Color = correctColor;
                 chartAccuracy.Series[0].Points[1].Color = wrongColor;
@@ -656,24 +659,19 @@ namespace codinglearning
         private string previousLang = "C#";
 
         // 2. 여기서부터 끝까지 콤보박스 이벤트 메서드 덮어쓰기
-        private void cbLanguage_SelectedIndexChanged(object sender, EventArgs e)
+        // 콤보박스 변경 시 실행되는 메서드 (async 추가됨!)
+        private async void cbLanguage_SelectedIndexChanged(object sender, EventArgs e)
         {
             string selectedLang = cbLanguage.SelectedItem?.ToString();
-
-            // 같은 언어를 또 클릭한 거면 무시
-            if (selectedLang == previousLang) return;
+            if (selectedLang == previousLang) return; // 같은 언어면 무시
 
             bool isUserCode = false;
             string currentCode = txtCode.Text;
 
+            // 작성 중인 코드가 있는지 검사하는 로직 (기존과 동일)
             if (!string.IsNullOrWhiteSpace(currentCode))
             {
-                // 조건 A: 기본 주석을 아예 지워버린 경우
-                if (!currentCode.Contains("여기에 코드를 작성하세요"))
-                {
-                    isUserCode = true;
-                }
-                // 조건 B: 주석은 놔뒀지만, 코드를 추가해서 '언어별 기본 길이'보다 길어진 경우
+                if (!currentCode.Contains("여기에 코드를 작성하세요")) isUserCode = true;
                 else
                 {
                     int len = currentCode.Length;
@@ -684,82 +682,71 @@ namespace codinglearning
                 }
             }
 
-            // 유저가 짠 코드가 맞다면 경고창 띄우기
+            // ⭐ 유저가 코드를 짜둔 상태라면? "마법의 3지선다 팝업창" 띄우기!
             if (isUserCode)
             {
-                DialogResult result = MessageBox.Show("이미 작성 중인 코드가 있습니다. 언어를 변경하고 초기화할까요?", "언어 변경", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                DialogResult result = MessageBox.Show(
+                    $"작성 중인 {previousLang} 코드가 있습니다.\n선택하신 {selectedLang}(으)로 🤖AI 자동 번역하시겠습니까?\n\n(예: AI 번역 유지 / 아니요: 초기화 / 취소: 변경 취소)",
+                    "AI 코드 자동 번역",
+                    MessageBoxButtons.YesNoCancel,
+                    MessageBoxIcon.Question);
 
-                // '아니요'를 누른 경우
-                if (result == DialogResult.No)
+                if (result == DialogResult.Cancel)
                 {
-                    // 콤보박스 선택이 바뀌는 이벤트 잠시 끄고 원상복구
+                    // 취소 누르면 콤보박스를 원래 언어로 슬쩍 되돌려놓음
                     cbLanguage.SelectedIndexChanged -= cbLanguage_SelectedIndexChanged;
                     cbLanguage.SelectedItem = previousLang;
                     cbLanguage.SelectedIndexChanged += cbLanguage_SelectedIndexChanged;
-                    return; // 뼈대 코드 생성 취소
+                    return;
                 }
+                else if (result == DialogResult.Yes)
+                {
+                    // ⭐ '예'를 누르면 대망의 AI 번역 시작!!
+                    // 앞서 수정한 Task<bool> 반환값을 isSuccess로 받습니다.
+                    bool isSuccess = await TranslateCodeAsync(currentCode, previousLang, selectedLang);
+
+                    if (isSuccess)
+                    {
+                        // 번역에 완벽하게 성공했을 때만! 프로그램이 기억하는 언어를 업데이트함
+                        previousLang = selectedLang;
+                    }
+                    else
+                    {
+                        // ⭐ 실패했을 경우: 콤보박스 화면을 조용히 원래 언어로 되돌려놓음
+                        // 이렇게 하면 다음에 다른 언어를 눌러도 다시 팝업창이 뜸!
+                        cbLanguage.SelectedIndexChanged -= cbLanguage_SelectedIndexChanged;
+                        cbLanguage.SelectedItem = previousLang;
+                        cbLanguage.SelectedIndexChanged += cbLanguage_SelectedIndexChanged;
+                    }
+                    return; // 번역 로직을 탔으니, 성공/실패 여부와 상관없이 기본 뼈대 코드 생성은 패스!
+                }
+                // '아니요'를 누르면 이 if문을 빠져나가서 원래대로 기본 뼈대 코드를 만듦
             }
 
-            // '예'를 누르거나, 처음 빈 화면일 때 뼈대 코드 세팅
+            // 처음이거나 '아니요(초기화)'를 눌렀을 때 기본 뼈대 세팅
             switch (selectedLang)
             {
                 case "C#":
-                    txtCode.Text =
-    @"using System;
-
-namespace CodingTest
-{
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            // 여기에 코드를 작성하세요
-            
-        }
-    }
-}";
+                    txtCode.Text = "using System;\n\nnamespace CodingTest\n{\n    class Program\n    {\n        static void Main(string[] args)\n        {\n            // 여기에 코드를 작성하세요\n            \n        }\n    }\n}";
                     break;
 
                 case "C++":
-                    txtCode.Text =
-    @"#include <iostream>
-using namespace std;
-
-int main() {
-    // 여기에 코드를 작성하세요
-    
-    return 0;
-}";
+                    txtCode.Text = "#include <iostream>\nusing namespace std;\n\nint main() {\n    // 여기에 코드를 작성하세요\n    \n    return 0;\n}";
                     break;
 
                 case "Java":
-                    txtCode.Text =
-    @"import java.util.*;
-
-public class Main {
-    public static void main(String[] args) {
-        // 여기에 코드를 작성하세요
-        
-    }
-}";
+                    txtCode.Text = "import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        // 여기에 코드를 작성하세요\n        \n    }\n}";
                     break;
 
                 case "Python":
-                    txtCode.Text =
-    @"def main():
-    # 여기에 코드를 작성하세요
-    pass
-
-if __name__ == '__main__':
-    main()";
+                    txtCode.Text = "def main():\n    # 여기에 코드를 작성하세요\n    pass\n\nif __name__ == '__main__':\n    main()";
                     break;
 
                 default:
                     txtCode.Text = "";
                     break;
             }
-
-            // 방금 세팅 완료된 언어를 '이전 언어'로 업데이트
+            
             previousLang = selectedLang;
         }
 
@@ -916,7 +903,8 @@ if __name__ == '__main__':
 
                 // 캡처하신 화면에 맞게 가로 막대(Bar)로 설정
                 series.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
-                series.Color = Color.FromArgb(160, 170, 180); // 세련된 웜그레이+블루 느낌의 뉴트럴 톤
+                // 다크 모드 상태를 확인해서 색상 적용!
+                series.Color = isDarkMode ? Color.FromArgb(70, 85, 100) : Color.FromArgb(160, 170, 180);
                 series.IsValueShownAsLabel = true; // 막대 끝에 숫자(분) 표시
 
                 foreach (var kvp in dailyStudyMap)
@@ -1218,19 +1206,52 @@ if __name__ == '__main__':
                         area.AxisY.LineColor = gridLine;
                     }
 
-                    // ⭐ 그라데이션 없애고, 눈이 편안한 파스텔톤 단색으로 세팅!
                     if (chart.Series.Count > 0)
                     {
-                        chart.Series[0].BackGradientStyle = GradientStyle.None; // 그라데이션 완전 제거
-                                                                                // 첫 번째 막대(풀이 수 등): 차분하고 고급스러운 파스텔 블루
-                        chart.Series[0].Color = isDarkMode ? Color.FromArgb(86, 156, 214) : Color.SteelBlue;
+                        chart.Series[0].BackGradientStyle = GradientStyle.None;
 
-                        // 만약 시리즈가 2개 이상(정답/오답 등)이라면 두 번째 색상도 지정
-                        if (chart.Series.Count > 1)
+                        if (chart.Series.Count > 0)
                         {
-                            chart.Series[1].BackGradientStyle = GradientStyle.None;
-                            // 두 번째 막대(오답 등): 거슬리지 않는 차분한 코랄 핑크
-                            chart.Series[1].Color = isDarkMode ? Color.FromArgb(206, 145, 120) : Color.IndianRed;
+                            chart.Series[0].BackGradientStyle = GradientStyle.None;
+
+                            if (chart.Name == "chartTimeHistory")
+                            {
+                                // [학습 시간 통계] 그래프
+                                // 다크모드일 때는 배경에 스며드는 차분한 딥 네이비/그레이 톤으로 변경
+                                chart.Series[0].Color = isDarkMode ? Color.FromArgb(70, 85, 100) : Color.FromArgb(160, 170, 180);
+                            }
+                            else if (chart.Name == "chartAccuracy")
+                            {
+                                // [문제 풀이 통계] 그래프
+                                // 다크모드에서는 눈 안 아픈 다크 그린 / 다크 로즈 색상으로 톤다운
+                                Color correctColor = isDarkMode ? Color.FromArgb(90, 130, 90) : Color.FromArgb(143, 188, 143);
+                                Color wrongColor = isDarkMode ? Color.FromArgb(160, 90, 90) : Color.FromArgb(224, 159, 150);
+
+                                // 차트에 데이터(막대)가 그려져 있을 때만 색상 덮어씌우기
+                                if (chart.Series[0].Points.Count >= 2)
+                                {
+                                    chart.Series[0].Points[0].Color = correctColor; // 정답 막대
+                                    chart.Series[0].Points[1].Color = wrongColor;   // 오답 막대
+                                }
+
+                                // 우측 상단에 있는 범례(Legend) 네모 박스 색상도 같이 바꿔주기
+                                if (chart.Legends[0].CustomItems.Count >= 2)
+                                {
+                                    chart.Legends[0].CustomItems[0].Color = correctColor;
+                                    chart.Legends[0].CustomItems[1].Color = wrongColor;
+                                }
+                            }
+                            else
+                            {
+                                // 혹시 모를 다른 기본 차트들용 색상 (마찬가지로 다크모드 톤다운)
+                                chart.Series[0].Color = isDarkMode ? Color.FromArgb(60, 110, 160) : Color.SteelBlue;
+
+                                if (chart.Series.Count > 1)
+                                {
+                                    chart.Series[1].BackGradientStyle = GradientStyle.None;
+                                    chart.Series[1].Color = isDarkMode ? Color.FromArgb(160, 90, 90) : Color.IndianRed;
+                                }
+                            }
                         }
                     }
                 }
@@ -1281,6 +1302,72 @@ if __name__ == '__main__':
                 {
                     ChangeControlColors(c, bg, text, box, gridLine, accent);
                 }
+            }
+        }
+
+        // 🤖 Google Gemini API를 호출해서 코드를 번역해주는 마법의 메서드 (완전 무료!)
+        // ⭐ Task<bool>로 변경하여 성공/실패 여부를 반환하도록 수정
+        private async Task<bool> TranslateCodeAsync(string code, string sourceLang, string targetLang)
+        {
+            // 🚨 Google AI Studio에서 발급받은 무료 API 키를 여기에 넣으세요!
+            string apiKey = "AIzaSyDtV4oYdaYHYrTyt1Ms_Xmz4gWLmJ5YjuY";
+
+            if (apiKey.Contains("여기에_Gemini_API_키를_넣으세요"))
+            {
+                MessageBox.Show("Gemini API 키가 설정되지 않았습니다. 코드에 API 키를 먼저 입력해주세요!", "API 키 필요", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false; // ⭐ API 키 없으면 실패(false) 반환
+            }
+
+            // 번역 중일 때 콤보박스 잠그기
+            cbLanguage.Enabled = false;
+            string originalText = txtCode.Text;
+            txtCode.Text = $"/* 🤖 구글 Gemini AI가 {sourceLang} 코드를 {targetLang}(으)로 번역하고 있습니다...\n   잠시만 기다려주세요! 🚀 */";
+
+            try
+            {
+                using (var client = new System.Net.Http.HttpClient())
+                {
+                    string url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={apiKey}";
+                    string prompt = $"You are an expert programmer. Translate the following {sourceLang} code to {targetLang}. Output ONLY the raw translated code. Do NOT wrap the code in markdown blocks like ```csharp or ```java. Do NOT add any explanations or text, just the code itself.\n\n{code}";
+
+                    var requestBody = new
+                    {
+                        contents = new[]
+                        {
+                            new { parts = new[] { new { text = prompt } } }
+                        }
+                    };
+
+                    string jsonContent = Newtonsoft.Json.JsonConvert.SerializeObject(requestBody);
+                    var content = new System.Net.Http.StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+
+                    var response = await client.PostAsync(url, content);
+                    response.EnsureSuccessStatusCode();
+
+                    string responseString = await response.Content.ReadAsStringAsync();
+                    var responseObject = Newtonsoft.Json.Linq.JObject.Parse(responseString);
+
+                    string translatedCode = responseObject["candidates"][0]["content"]["parts"][0]["text"].ToString().Trim();
+
+                    if (translatedCode.StartsWith("```"))
+                    {
+                        var lines = translatedCode.Split('\n');
+                        translatedCode = string.Join("\n", lines.Skip(1).Take(lines.Length - 2));
+                    }
+
+                    txtCode.Text = translatedCode.Trim();
+                    return true; // ⭐ 번역 완벽하게 성공 시 true 반환
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"AI 번역 중 오류가 발생했습니다: {ex.Message}", "번역 실패", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                txtCode.Text = originalText; // 에러 나면 원래 코드로 원상복구
+                return false; // ⭐ 에러 발생 시 실패(false) 반환
+            }
+            finally
+            {
+                cbLanguage.Enabled = true; // 콤보박스 다시 활성화
             }
         }
     }
