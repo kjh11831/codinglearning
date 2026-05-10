@@ -73,9 +73,6 @@ namespace codinglearning
             // 프로그램 시작 시 라이트 모드 테마 적용
             ApplyTheme();
 
-            // 프로그램 시작 시 라이트 모드 테마 적용
-            ApplyTheme();
-
             // ⭐ [추가] 폼이 꺼질 때 방금 만든 안전장치(Form1_FormClosing)가 작동하도록 연결!
             this.FormClosing += Form1_FormClosing;
         }
@@ -299,7 +296,6 @@ namespace codinglearning
             }
 
             isRunningSample = true;
-
             btnRunSample.Text = "실행 중...";
             btnRunSample.ForeColor = isDarkMode ? Color.White : SystemColors.ControlText;
             btnRunSample.Refresh();
@@ -308,21 +304,26 @@ namespace codinglearning
 
             try
             {
-                var (isCorrect, message) = await apiService.RunJudge0Async(txtCode.Text, cbLanguage.SelectedItem.ToString());
+                string currentLang = cbLanguage.SelectedItem.ToString();
+                var (isCorrect, message) = await apiService.RunJudge0Async(txtCode.Text, currentLang);
                 txtResult.Text = message;
 
-                SaveCodeToLocalFile(selId, selTitle, txtCode.Text, cbLanguage.SelectedItem.ToString(), isCorrect);
+                SaveCodeToLocalFile(selId, selTitle, txtCode.Text, currentLang, isCorrect);
 
                 var record = new SubmissionRecord
                 {
                     code = txtCode.Text,
                     status = isCorrect ? "correct" : "wrong",
-                    language = cbLanguage.SelectedItem.ToString(),
+                    language = currentLang,
                     date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                     title = selTitle
                 };
 
-                await firebaseManager.SaveSubmissionAsync(selId, record, selDiff, selTags);
+                // ⭐ [핵심] C#, C++ 특수기호가 URL을 망가뜨리지 않게 안전한 글자로 변환!
+                string safeLang = currentLang.Replace("#", "Sharp").Replace("+", "p");
+                string uniqueKey = $"{selId}_{safeLang}";
+
+                await firebaseManager.SaveSubmissionAsync(uniqueKey, record, selDiff, selTags);
             }
             catch (Exception ex)
             {
@@ -359,24 +360,31 @@ namespace codinglearning
             else if (tabControl1.SelectedIndex == 4) await LoadTimeStatisticsUI();
         }
 
+        // ⭐ 표(풀이 내역)를 불러오고 필터링을 적용하는 마법의 메서드
         private async Task LoadWrongListUI()
         {
             var dict = await firebaseManager.GetWrongListAsync();
             dgvWrongList.Rows.Clear();
             if (dict == null) return;
 
-            dgvWrongList.ColumnCount = 7;
+            dgvWrongList.ColumnCount = 8; // ⭐ 7에서 8로 증가!
             dgvWrongList.Columns[0].HeaderText = "번호";
             dgvWrongList.Columns[1].HeaderText = "제목";
-            dgvWrongList.Columns[2].HeaderText = "난이도";
-            dgvWrongList.Columns[3].HeaderText = "태그";
-            dgvWrongList.Columns[4].HeaderText = "결과";
-            dgvWrongList.Columns[5].HeaderText = "오답 발생일";
-            dgvWrongList.Columns[6].HeaderText = "복습 예정일";
+            dgvWrongList.Columns[2].HeaderText = "언어"; // ⭐ 언어 열 추가
+            dgvWrongList.Columns[3].HeaderText = "난이도";
+            dgvWrongList.Columns[4].HeaderText = "태그";
+            dgvWrongList.Columns[5].HeaderText = "결과";
+            dgvWrongList.Columns[6].HeaderText = "발생일(풀이일)";
+            dgvWrongList.Columns[7].HeaderText = "복습 예정일";
 
             foreach (var item in dict)
             {
-                string pNum = item.Key;
+                // ⭐ "2225A_CSharp" 같은 키에서 번호와 언어를 분리하고 기호 복구!
+                string rawKey = item.Key;
+                string pNum = rawKey.Split('_')[0];
+                string safeLang = rawKey.Contains("_") ? rawKey.Split('_')[1] : "알 수 없음";
+                string lang = safeLang.Replace("Sharp", "#").Replace("p", "+"); // 화면엔 다시 C#으로!
+
                 string title = item.Value["title"]?.ToString() ?? "-";
                 string diff = item.Value["diff"]?.ToString() ?? "-";
                 string tags = item.Value["tags"]?.ToString() ?? "-";
@@ -384,7 +392,11 @@ namespace codinglearning
                 string date = item.Value["addedDate"]?.ToString() ?? "-";
                 string reviewDateStr = item.Value["reviewDate"]?.ToString() ?? "-";
 
-                int rowIndex = dgvWrongList.Rows.Add(pNum, title, diff, tags, isSolved ? "✅ 해결됨" : "❌ 미해결", date, reviewDateStr);
+                if (rbCorrect != null && rbCorrect.Checked && !isSolved) continue;
+                if (rbWrong != null && rbWrong.Checked && isSolved) continue;
+
+                // ⭐ 셀 추가할 때 lang(언어) 변수 삽입
+                int rowIndex = dgvWrongList.Rows.Add(pNum, title, lang, diff, tags, isSolved ? "✅ 해결됨" : "❌ 미해결", date, reviewDateStr);
 
                 if (!isSolved && DateTime.TryParse(reviewDateStr, out DateTime reviewDate))
                 {
@@ -402,16 +414,21 @@ namespace codinglearning
             sessionManager.RecordUserAction();
             if (e.RowIndex >= 0)
             {
-                object cellValue = dgvWrongList.Rows[e.RowIndex].Cells[0].Value;
-                string probNum = cellValue?.ToString();
+                string pNum = dgvWrongList.Rows[e.RowIndex].Cells[0].Value?.ToString();
+                string lang = dgvWrongList.Rows[e.RowIndex].Cells[2].Value?.ToString();
 
                 var dict = await firebaseManager.GetWrongListAsync();
 
-                if (!string.IsNullOrWhiteSpace(probNum) && dict != null && dict.ContainsKey(probNum))
-                {
-                    JObject data = JObject.FromObject(dict[probNum]);
+                // ⭐ DB에서 찾을 땐 다시 안전한 글자로 변환해서 검색 ("C#" -> "CSharp")
+                string safeLang = lang.Replace("#", "Sharp").Replace("+", "p");
+                string searchKey = $"{pNum}_{safeLang}";
+                if (dict != null && !dict.ContainsKey(searchKey)) searchKey = pNum;
 
-                    lblWrongProbNum.Text = probNum;
+                if (!string.IsNullOrWhiteSpace(searchKey) && dict != null && dict.ContainsKey(searchKey))
+                {
+                    JObject data = JObject.FromObject(dict[searchKey]);
+
+                    lblWrongProbNum.Text = pNum; // 화면엔 번호만 깔끔하게 표시
                     lblWrongProbTitle.Text = data["title"] != null ? data["title"].ToString() : "-";
                     lblWrongProbDiff.Text = data["diff"] != null ? data["diff"].ToString() : "-";
                     lblWrongProbTags.Text = data["tags"] != null ? data["tags"].ToString() : "-";
@@ -478,17 +495,24 @@ namespace codinglearning
             if (dgvRecentRecords != null)
             {
                 dgvRecentRecords.Rows.Clear();
-                dgvRecentRecords.ColumnCount = 4;
+                dgvRecentRecords.ColumnCount = 5; // ⭐ 4에서 5로 증가
                 dgvRecentRecords.Columns[0].Name = "번호";
                 dgvRecentRecords.Columns[1].Name = "제목";
-                dgvRecentRecords.Columns[2].Name = "결과";
-                dgvRecentRecords.Columns[3].Name = "날짜";
+                dgvRecentRecords.Columns[2].Name = "언어"; // ⭐ 언어 열 추가
+                dgvRecentRecords.Columns[3].Name = "결과";
+                dgvRecentRecords.Columns[4].Name = "날짜";
             }
 
             foreach (var problem in dict)
             {
                 totalProblems++;
                 bool hasCorrect = false;
+
+                // ⭐ 번호와 언어 분리 및 기호 복구
+                string rawKey = problem.Key;
+                string pNum = rawKey.Split('_')[0];
+                string safeLang = rawKey.Contains("_") ? rawKey.Split('_')[1] : "알 수 없음";
+                string lang = safeLang.Replace("Sharp", "#").Replace("p", "+");
 
                 foreach (var attempt in problem.Value["attempts"])
                 {
@@ -500,7 +524,8 @@ namespace codinglearning
 
                     if (dgvRecentRecords != null)
                     {
-                        dgvRecentRecords.Rows.Add(problem.Key, title, status == "correct" ? "✅ 정답" : "❌ 오답", date);
+                        // ⭐ lang 변수 삽입
+                        dgvRecentRecords.Rows.Add(pNum, title, lang, status == "correct" ? "✅ 정답" : "❌ 오답", date);
                     }
                 }
                 if (hasCorrect) correctCount++;
@@ -882,7 +907,7 @@ namespace codinglearning
         {
             foreach (Control c in parent.Controls)
             {
-                if (c is Label || c is CheckBox)
+                if (c is Label || c is CheckBox || c is RadioButton)
                 {
                     c.BackColor = Color.Transparent;
                     c.ForeColor = text;
@@ -1119,6 +1144,21 @@ namespace codinglearning
 
             txtCode.Text = GetDefaultTemplate(selectedLang);
             previousLang = selectedLang;
+        }
+
+        private async void rbAll_CheckedChanged(object sender, EventArgs e)
+        {
+            if (rbAll.Checked) await LoadWrongListUI();
+        }
+
+        private async void rbCorrect_CheckedChanged(object sender, EventArgs e)
+        {
+            if (rbCorrect.Checked) await LoadWrongListUI();
+        }
+
+        private async void rbWrong_CheckedChanged(object sender, EventArgs e)
+        {
+            if (rbWrong.Checked) await LoadWrongListUI();
         }
 
         // ⭐ 콤보박스를 원래 상태로 되돌려주는 도우미 메서드
