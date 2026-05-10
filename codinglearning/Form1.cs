@@ -72,6 +72,12 @@ namespace codinglearning
 
             // 프로그램 시작 시 라이트 모드 테마 적용
             ApplyTheme();
+
+            // 프로그램 시작 시 라이트 모드 테마 적용
+            ApplyTheme();
+
+            // ⭐ [추가] 폼이 꺼질 때 방금 만든 안전장치(Form1_FormClosing)가 작동하도록 연결!
+            this.FormClosing += Form1_FormClosing;
         }
 
         private void learningTimer_Tick(object sender, EventArgs e)
@@ -1244,5 +1250,39 @@ Code to translate:
                 cbLanguage.Enabled = true;
             }
         }
+
+        // ⭐ 창의 'X' 버튼을 눌러서 강제로 끌 때, 학습 기록이 날아가지 않게 자동 저장해주는 안전장치
+        private async void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // 현재 상태가 'Break(휴식)'이 아니라면 = 아직 세션 종료를 안 누르고 학습 중이라면!
+            if (sessionManager.CurrentStatus != "Break")
+            {
+                // 1. 창이 바로 꺼져버리지 않도록 잠시 멈춤(Cancel)
+                e.Cancel = true;
+
+                // 2. 타이머를 멈추고 세션 상태를 강제로 종료시킴
+                learningTimer.Stop();
+                sessionManager.StopSession();
+
+                // 3. 저장할 학습 시간 데이터 조립
+                int duration = sessionManager.GetTotalSeconds();
+                var sessionData = new SessionData
+                {
+                    status = "Break",
+                    sessionEnd = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                    sessionDuration = duration,
+                    lastActiveTime = sessionManager.LastActiveTime.ToString("yyyy-MM-dd HH:mm:ss")
+                };
+
+                // 4. 파이어베이스에 안전하게 자동 저장 🚀
+                await firebaseManager.SaveSessionAsync(sessionData);
+                await firebaseManager.PushSessionLogAsync(sessionData);
+
+                // 5. 저장이 완벽하게 끝났으니, 다시 강제로 닫히지 않게 연결을 끊고 진짜로 창을 닫음!
+                this.FormClosing -= Form1_FormClosing;
+                this.Close();
+            }
+        }
+
     }
 }
