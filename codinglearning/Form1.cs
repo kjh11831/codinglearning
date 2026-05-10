@@ -1173,7 +1173,7 @@ namespace codinglearning
         private async Task<bool> TranslateCodeAsync(string code, string sourceLang, string targetLang)
         {
             // 🚨 네 진짜 API 키!
-            string apiKey = "AIzaSyABPN1NgXz6-kFZWpF90tnXwbh1okWC0Tw".Trim();
+            string apiKey = "AIzaSyCK_Hs2ekhaAHXQwSYbbKIwuVr8W-fwTrM".Trim();
 
             cbLanguage.Enabled = false;
             string originalText = txtCode.Text;
