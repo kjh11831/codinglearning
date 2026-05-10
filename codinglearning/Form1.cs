@@ -360,86 +360,264 @@ namespace codinglearning
             else if (tabControl1.SelectedIndex == 4) await LoadTimeStatisticsUI();
         }
 
-        // ⭐ 표(풀이 내역)를 불러오고 필터링을 적용하는 마법의 메서드
+        // ⭐ 표(풀이 내역)를 불러오고 필터링을 적용하는 마법의 메서드 (완성형 🚀)
         private async Task LoadWrongListUI()
         {
-            var dict = await firebaseManager.GetWrongListAsync();
-            dgvWrongList.Rows.Clear();
-            if (dict == null) return;
+            var wrongDict = await firebaseManager.GetWrongListAsync();
+            var allDict = await firebaseManager.GetAllSubmissionsAsync();
 
-            dgvWrongList.ColumnCount = 8; // ⭐ 7에서 8로 증가!
+            dgvWrongList.Rows.Clear();
+            dgvWrongList.ColumnCount = 8;
             dgvWrongList.Columns[0].HeaderText = "번호";
             dgvWrongList.Columns[1].HeaderText = "제목";
-            dgvWrongList.Columns[2].HeaderText = "언어"; // ⭐ 언어 열 추가
+            dgvWrongList.Columns[2].HeaderText = "언어";
             dgvWrongList.Columns[3].HeaderText = "난이도";
             dgvWrongList.Columns[4].HeaderText = "태그";
             dgvWrongList.Columns[5].HeaderText = "결과";
             dgvWrongList.Columns[6].HeaderText = "발생일(풀이일)";
             dgvWrongList.Columns[7].HeaderText = "복습 예정일";
 
-            foreach (var item in dict)
+            HashSet<string> processedKeys = new HashSet<string>();
+
+            Dictionary<string, (string title, string diff, string tags)> infoCache = new Dictionary<string, (string, string, string)>();
+
+            void UpdateCache(string num, string t, string d, string tg)
             {
-                // ⭐ "2225A_CSharp" 같은 키에서 번호와 언어를 분리하고 기호 복구!
-                string rawKey = item.Key;
-                string pNum = rawKey.Split('_')[0];
-                string safeLang = rawKey.Contains("_") ? rawKey.Split('_')[1] : "알 수 없음";
-                string lang = safeLang.Replace("Sharp", "#").Replace("p", "+"); // 화면엔 다시 C#으로!
-
-                string title = item.Value["title"]?.ToString() ?? "-";
-                string diff = item.Value["diff"]?.ToString() ?? "-";
-                string tags = item.Value["tags"]?.ToString() ?? "-";
-                bool isSolved = item.Value["solvedAfter"] != null && (bool)item.Value["solvedAfter"];
-                string date = item.Value["addedDate"]?.ToString() ?? "-";
-                string reviewDateStr = item.Value["reviewDate"]?.ToString() ?? "-";
-
-                if (rbCorrect != null && rbCorrect.Checked && !isSolved) continue;
-                if (rbWrong != null && rbWrong.Checked && isSolved) continue;
-
-                // ⭐ 셀 추가할 때 lang(언어) 변수 삽입
-                int rowIndex = dgvWrongList.Rows.Add(pNum, title, lang, diff, tags, isSolved ? "✅ 해결됨" : "❌ 미해결", date, reviewDateStr);
-
-                if (!isSolved && DateTime.TryParse(reviewDateStr, out DateTime reviewDate))
+                if (!infoCache.ContainsKey(num)) infoCache[num] = (t, d, tg);
+                else
                 {
-                    if (reviewDate < DateTime.Now)
+                    var existing = infoCache[num];
+                    string newT = existing.title == "-" && t != "-" ? t : existing.title;
+                    string newD = existing.diff == "-" && d != "-" ? d : existing.diff;
+                    string newTg = existing.tags == "-" && tg != "-" ? tg : existing.tags;
+                    infoCache[num] = (newT, newD, newTg);
+                }
+            }
+
+            Dictionary<string, JObject> normAllDict = new Dictionary<string, JObject>();
+            if (allDict != null)
+            {
+                foreach (var problem in allDict)
+                {
+                    string normKey = problem.Key.Replace("+", "p").Replace("#", "Sharp");
+                    JObject pData = JObject.FromObject(problem.Value);
+                    normAllDict[normKey] = pData;
+
+                    string pNum = normKey.Split('_')[0];
+                    string d = pData["diff"]?.ToString() ?? pData["difficulty"]?.ToString() ?? "-";
+                    string tg = pData["tags"]?.ToString() ?? "-";
+                    string t = "-";
+
+                    JToken attemptsToken = pData["attempts"];
+                    if (attemptsToken != null && attemptsToken.HasValues)
                     {
-                        dgvWrongList.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.IndianRed;
-                        dgvWrongList.Rows[rowIndex].DefaultCellStyle.Font = new Font(dgvWrongList.Font, FontStyle.Bold);
+                        var firstAttempt = attemptsToken.First;
+                        if (firstAttempt is JProperty prop)
+                        {
+                            t = prop.Value["title"]?.ToString() ?? "-";
+                            if (d == "-") d = prop.Value["diff"]?.ToString() ?? "-";
+                            if (tg == "-") tg = prop.Value["tags"]?.ToString() ?? "-";
+                        }
+                        else if (firstAttempt != null)
+                        {
+                            t = firstAttempt["title"]?.ToString() ?? "-";
+                            if (d == "-") d = firstAttempt["diff"]?.ToString() ?? "-";
+                            if (tg == "-") tg = firstAttempt["tags"]?.ToString() ?? "-";
+                        }
                     }
+                    UpdateCache(pNum, t, d, tg);
+                }
+            }
+
+            if (wrongDict != null)
+            {
+                foreach (var item in wrongDict)
+                {
+                    string pNum = item.Key.Split('_')[0];
+                    string t = item.Value["title"]?.ToString() ?? "-";
+                    string d = item.Value["diff"]?.ToString() ?? "-";
+                    string tg = item.Value["tags"]?.ToString() ?? "-";
+                    UpdateCache(pNum, t, d, tg);
+                }
+            }
+
+            // =====================================================================
+            // 1단계: '오답 노트'에 있는 기록 출력
+            // =====================================================================
+            if (wrongDict != null)
+            {
+                foreach (var item in wrongDict)
+                {
+                    string rawKey = item.Key;
+                    string normKey = rawKey.Replace("+", "p").Replace("#", "Sharp");
+                    processedKeys.Add(normKey);
+
+                    string pNum = normKey.Split('_')[0];
+                    string safeLang = normKey.Contains("_") ? normKey.Split('_')[1] : "알 수 없음";
+                    string lang = safeLang.Replace("Sharp", "#").Replace("p", "+");
+
+                    string title = item.Value["title"]?.ToString() ?? "-";
+                    string diff = item.Value["diff"]?.ToString() ?? "-";
+                    string tags = item.Value["tags"]?.ToString() ?? "-";
+
+                    if (title == "-" || diff == "-" || tags == "-")
+                    {
+                        if (infoCache.ContainsKey(pNum))
+                        {
+                            if (title == "-") title = infoCache[pNum].title;
+                            if (diff == "-") diff = infoCache[pNum].diff;
+                            if (tags == "-") tags = infoCache[pNum].tags;
+                        }
+                        if (pNum == selId)
+                        {
+                            if (title == "-") title = selTitle;
+                            if (diff == "-") diff = selDiff;
+                            if (tags == "-") tags = selTags;
+                        }
+                    }
+
+                    bool isSolved = item.Value["solvedAfter"] != null && (bool)item.Value["solvedAfter"];
+                    string date = item.Value["addedDate"]?.ToString() ?? "-";
+                    string reviewDateStr = item.Value["reviewDate"]?.ToString() ?? "-";
+
+                    int tryCount = 1;
+
+                    if (normAllDict.ContainsKey(normKey))
+                    {
+                        JObject pData = normAllDict[normKey];
+                        JToken attemptsToken = pData["attempts"];
+                        if (attemptsToken != null)
+                        {
+                            tryCount = attemptsToken.Children().Count();
+                            foreach (var attempt in attemptsToken)
+                            {
+                                string status = attempt.First?["status"]?.ToString() ?? attempt["status"]?.ToString();
+                                if (status == "correct")
+                                {
+                                    isSolved = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (rbCorrect != null && rbCorrect.Checked && !isSolved) continue;
+                    if (rbWrong != null && rbWrong.Checked && isSolved) continue;
+
+                    // ⭐ [핵심 추가] 해결된 상태라면 복습 예정일을 무조건 "-"로 지워버림!
+                    string finalReviewDate = isSolved ? "-" : reviewDateStr;
+                    string resultText = isSolved ? $"✅ 해결됨 ({tryCount}-Try)" : "❌ 미해결";
+
+                    // ⭐ 표에 넣을 때 reviewDateStr 대신 finalReviewDate를 넣습니다.
+                    int rowIndex = dgvWrongList.Rows.Add(pNum, title, lang, diff, tags, resultText, date, finalReviewDate);
+
+                    if (!isSolved && DateTime.TryParse(finalReviewDate, out DateTime reviewDate))
+                    {
+                        if (reviewDate < DateTime.Now)
+                        {
+                            dgvWrongList.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.IndianRed;
+                            dgvWrongList.Rows[rowIndex].DefaultCellStyle.Font = new Font(dgvWrongList.Font, FontStyle.Bold);
+                        }
+                    }
+                }
+            }
+
+            // =====================================================================
+            // 2단계: '전체 기록' 중 오답 노트에 없는 순수 정답(1-Try 등) 및 누락 기록 출력
+            // =====================================================================
+            if (normAllDict != null)
+            {
+                foreach (var kvp in normAllDict)
+                {
+                    string normKey = kvp.Key;
+                    if (processedKeys.Contains(normKey)) continue;
+
+                    JObject pData = kvp.Value;
+                    string pNum = normKey.Split('_')[0];
+                    string safeLang = normKey.Contains("_") ? normKey.Split('_')[1] : "알 수 없음";
+                    string lang = safeLang.Replace("Sharp", "#").Replace("p", "+");
+
+                    string title = "-";
+                    string date = "-";
+                    string diff = pData["diff"]?.ToString() ?? pData["difficulty"]?.ToString() ?? "-";
+                    string tags = pData["tags"]?.ToString() ?? "-";
+
+                    int tryCount = 1;
+                    bool hasCorrect = false;
+
+                    JToken attemptsToken = pData["attempts"];
+                    if (attemptsToken != null && attemptsToken.HasValues)
+                    {
+                        tryCount = attemptsToken.Children().Count();
+                        foreach (var attempt in attemptsToken)
+                        {
+                            string status = attempt.First?["status"]?.ToString() ?? attempt["status"]?.ToString();
+                            if (status == "correct") hasCorrect = true;
+                        }
+
+                        var firstAttempt = attemptsToken.First;
+                        if (firstAttempt is JProperty prop)
+                        {
+                            title = prop.Value["title"]?.ToString() ?? "-";
+                            date = prop.Value["date"]?.ToString() ?? "-";
+                            if (diff == "-") diff = prop.Value["diff"]?.ToString() ?? "-";
+                            if (tags == "-") tags = prop.Value["tags"]?.ToString() ?? "-";
+                        }
+                        else if (firstAttempt != null)
+                        {
+                            title = firstAttempt["title"]?.ToString() ?? "-";
+                            date = firstAttempt["date"]?.ToString() ?? "-";
+                            if (diff == "-") diff = firstAttempt["diff"]?.ToString() ?? "-";
+                            if (tags == "-") tags = firstAttempt["tags"]?.ToString() ?? "-";
+                        }
+                    }
+
+                    if (title == "-" || diff == "-" || tags == "-")
+                    {
+                        if (infoCache.ContainsKey(pNum))
+                        {
+                            if (title == "-") title = infoCache[pNum].title;
+                            if (diff == "-") diff = infoCache[pNum].diff;
+                            if (tags == "-") tags = infoCache[pNum].tags;
+                        }
+                        if (pNum == selId)
+                        {
+                            if (title == "-") title = selTitle;
+                            if (diff == "-") diff = selDiff;
+                            if (tags == "-") tags = selTags;
+                        }
+                    }
+
+                    if (rbCorrect != null && rbCorrect.Checked && !hasCorrect) continue;
+                    if (rbWrong != null && rbWrong.Checked && hasCorrect) continue;
+
+                    string resultText = hasCorrect ? $"✅ 해결됨 ({tryCount}-Try)" : "❌ 미해결";
+
+                    // 여기는 원래부터 2단계(순수 정답)라 복습 예정일이 "-"로 잘 들어가 있어!
+                    dgvWrongList.Rows.Add(pNum, title, lang, diff, tags, resultText, date, "-");
                 }
             }
         }
 
-        private async void dgvWrongList_CellClick(object sender, DataGridViewCellEventArgs e)
+        // ⭐ 표를 클릭하면 우측 정보창에 바로 띄워주기 (잔렉 완벽 제거판 ⚡)
+        private void dgvWrongList_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             sessionManager.RecordUserAction();
-            if (e.RowIndex >= 0)
+
+            if (e.RowIndex >= 0 && !dgvWrongList.Rows[e.RowIndex].IsNewRow)
             {
-                string pNum = dgvWrongList.Rows[e.RowIndex].Cells[0].Value?.ToString();
-                string lang = dgvWrongList.Rows[e.RowIndex].Cells[2].Value?.ToString();
+                // 클릭한 줄(Row)의 데이터를 통째로 가져옴
+                DataGridViewRow row = dgvWrongList.Rows[e.RowIndex];
 
-                var dict = await firebaseManager.GetWrongListAsync();
+                // 셀 번호에 맞춰서 라벨에 텍스트 쏙쏙 집어넣기
+                lblWrongProbNum.Text = row.Cells[0].Value?.ToString() ?? "-";
+                lblWrongProbTitle.Text = row.Cells[1].Value?.ToString() ?? "-";
+                lblWrongProbDiff.Text = row.Cells[3].Value?.ToString() ?? "-";
+                lblWrongProbTags.Text = row.Cells[4].Value?.ToString() ?? "-";
 
-                // ⭐ DB에서 찾을 땐 다시 안전한 글자로 변환해서 검색 ("C#" -> "CSharp")
-                string safeLang = lang.Replace("#", "Sharp").Replace("+", "p");
-                string searchKey = $"{pNum}_{safeLang}";
-                if (dict != null && !dict.ContainsKey(searchKey)) searchKey = pNum;
-
-                if (!string.IsNullOrWhiteSpace(searchKey) && dict != null && dict.ContainsKey(searchKey))
-                {
-                    JObject data = JObject.FromObject(dict[searchKey]);
-
-                    lblWrongProbNum.Text = pNum; // 화면엔 번호만 깔끔하게 표시
-                    lblWrongProbTitle.Text = data["title"] != null ? data["title"].ToString() : "-";
-                    lblWrongProbDiff.Text = data["diff"] != null ? data["diff"].ToString() : "-";
-                    lblWrongProbTags.Text = data["tags"] != null ? data["tags"].ToString() : "-";
-
-                    bool isSolved = data["solvedAfter"] != null && (bool)data["solvedAfter"];
-                    lblWrongProbResult.Text = isSolved ? "해결됨" : "미해결";
-                }
-                else
-                {
-                    ClearWrongDetailLabels();
-                }
+                string resultText = row.Cells[5].Value?.ToString() ?? "-";
+                // "✅ 해결됨"이나 "✅ 정답(1-Try)" 같은 특수문자 떼어내고 깔끔하게 표시
+                lblWrongProbResult.Text = resultText.Contains("미해결") ? "미해결" : "해결됨";
             }
         }
 
@@ -1173,7 +1351,7 @@ namespace codinglearning
         private async Task<bool> TranslateCodeAsync(string code, string sourceLang, string targetLang)
         {
             // 🚨 네 진짜 API 키!
-            string apiKey = "AIzaSyCK_Hs2ekhaAHXQwSYbbKIwuVr8W-fwTrM".Trim();
+            string apiKey = "AIzaSyBILQSzq5R9itj3eRWIcl_Q_pJwHOp6JJ8".Trim();
 
             cbLanguage.Enabled = false;
             string originalText = txtCode.Text;
