@@ -29,12 +29,12 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend3 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend4 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblTimer = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
@@ -82,7 +82,6 @@
             this.rbAll = new System.Windows.Forms.RadioButton();
             this.groupBox10 = new System.Windows.Forms.GroupBox();
             this.btnExportWrongList = new System.Windows.Forms.Button();
-            this.lblWrongProbTags = new System.Windows.Forms.Label();
             this.lblWrongProbDiff = new System.Windows.Forms.Label();
             this.lblWrongProbTitle = new System.Windows.Forms.Label();
             this.lblWrongProbNum = new System.Windows.Forms.Label();
@@ -127,7 +126,6 @@
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.lblDarkMode = new System.Windows.Forms.Label();
-            this.lblSelProbTags = new System.Windows.Forms.Label();
             this.lblSelProbDiff = new System.Windows.Forms.Label();
             this.lblSelProbTitle = new System.Windows.Forms.Label();
             this.lblSelProbNum = new System.Windows.Forms.Label();
@@ -154,6 +152,8 @@
             this.Tags = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Result = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.lblSelProbTags = new System.Windows.Forms.Label();
+            this.lblWrongProbTags = new System.Windows.Forms.Label();
             this.statusStrip1.SuspendLayout();
             this.tabPage5.SuspendLayout();
             this.groupBox14.SuspendLayout();
@@ -243,7 +243,7 @@
             this.tabPage5.Controls.Add(this.groupBox4);
             this.tabPage5.Location = new System.Drawing.Point(4, 35);
             this.tabPage5.Name = "tabPage5";
-            this.tabPage5.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.tabPage5.Padding = new System.Windows.Forms.Padding(3);
             this.tabPage5.Size = new System.Drawing.Size(1103, 582);
             this.tabPage5.TabIndex = 4;
             this.tabPage5.Text = "학습 시간 통계/그래프";
@@ -399,17 +399,17 @@
             this.chartTimeHistory.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            chartArea1.Name = "ChartArea1";
-            this.chartTimeHistory.ChartAreas.Add(chartArea1);
-            legend1.Name = "Legend1";
-            this.chartTimeHistory.Legends.Add(legend1);
+            chartArea3.Name = "ChartArea1";
+            this.chartTimeHistory.ChartAreas.Add(chartArea3);
+            legend3.Name = "Legend1";
+            this.chartTimeHistory.Legends.Add(legend3);
             this.chartTimeHistory.Location = new System.Drawing.Point(15, 29);
             this.chartTimeHistory.Name = "chartTimeHistory";
-            series1.ChartArea = "ChartArea1";
-            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
-            series1.Legend = "Legend1";
-            series1.Name = "Series1";
-            this.chartTimeHistory.Series.Add(series1);
+            series3.ChartArea = "ChartArea1";
+            series3.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
+            series3.Legend = "Legend1";
+            series3.Name = "Series1";
+            this.chartTimeHistory.Series.Add(series3);
             this.chartTimeHistory.Size = new System.Drawing.Size(1046, 247);
             this.chartTimeHistory.TabIndex = 0;
             this.chartTimeHistory.Text = "chart1";
@@ -421,7 +421,7 @@
             this.tabPage4.Controls.Add(this.groupBox11);
             this.tabPage4.Location = new System.Drawing.Point(4, 35);
             this.tabPage4.Name = "tabPage4";
-            this.tabPage4.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.tabPage4.Padding = new System.Windows.Forms.Padding(3);
             this.tabPage4.Size = new System.Drawing.Size(1103, 582);
             this.tabPage4.TabIndex = 3;
             this.tabPage4.Text = "문제 풀이 통계/그래프";
@@ -508,17 +508,17 @@
             this.chartAccuracy.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            chartArea2.Name = "ChartArea1";
-            this.chartAccuracy.ChartAreas.Add(chartArea2);
-            legend2.Name = "Legend1";
-            this.chartAccuracy.Legends.Add(legend2);
+            chartArea4.Name = "ChartArea1";
+            this.chartAccuracy.ChartAreas.Add(chartArea4);
+            legend4.Name = "Legend1";
+            this.chartAccuracy.Legends.Add(legend4);
             this.chartAccuracy.Location = new System.Drawing.Point(15, 29);
             this.chartAccuracy.Name = "chartAccuracy";
-            series2.ChartArea = "ChartArea1";
-            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
-            series2.Legend = "Legend1";
-            series2.Name = "Series1";
-            this.chartAccuracy.Series.Add(series2);
+            series4.ChartArea = "ChartArea1";
+            series4.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
+            series4.Legend = "Legend1";
+            series4.Name = "Series1";
+            this.chartAccuracy.Series.Add(series4);
             this.chartAccuracy.Size = new System.Drawing.Size(1046, 252);
             this.chartAccuracy.TabIndex = 0;
             this.chartAccuracy.Text = "chart1";
@@ -618,7 +618,7 @@
             this.tabPage3.Controls.Add(this.groupBox9);
             this.tabPage3.Location = new System.Drawing.Point(4, 35);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.tabPage3.Padding = new System.Windows.Forms.Padding(3);
             this.tabPage3.Size = new System.Drawing.Size(1103, 582);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "문제 풀이 내역";
@@ -632,9 +632,9 @@
             this.groupBox16.Controls.Add(this.rbCorrect);
             this.groupBox16.Controls.Add(this.rbAll);
             this.groupBox16.Location = new System.Drawing.Point(13, 10);
-            this.groupBox16.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.groupBox16.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox16.Name = "groupBox16";
-            this.groupBox16.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.groupBox16.Padding = new System.Windows.Forms.Padding(2);
             this.groupBox16.Size = new System.Drawing.Size(813, 67);
             this.groupBox16.TabIndex = 2;
             this.groupBox16.TabStop = false;
@@ -644,7 +644,7 @@
             // 
             this.rbWrong.AutoSize = true;
             this.rbWrong.Location = new System.Drawing.Point(372, 32);
-            this.rbWrong.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.rbWrong.Margin = new System.Windows.Forms.Padding(2);
             this.rbWrong.Name = "rbWrong";
             this.rbWrong.Size = new System.Drawing.Size(172, 27);
             this.rbWrong.TabIndex = 2;
@@ -657,7 +657,7 @@
             // 
             this.rbCorrect.AutoSize = true;
             this.rbCorrect.Location = new System.Drawing.Point(158, 32);
-            this.rbCorrect.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.rbCorrect.Margin = new System.Windows.Forms.Padding(2);
             this.rbCorrect.Name = "rbCorrect";
             this.rbCorrect.Size = new System.Drawing.Size(172, 27);
             this.rbCorrect.TabIndex = 1;
@@ -671,7 +671,7 @@
             this.rbAll.AutoSize = true;
             this.rbAll.Checked = true;
             this.rbAll.Location = new System.Drawing.Point(15, 32);
-            this.rbAll.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.rbAll.Margin = new System.Windows.Forms.Padding(2);
             this.rbAll.Name = "rbAll";
             this.rbAll.Size = new System.Drawing.Size(105, 27);
             this.rbAll.TabIndex = 0;
@@ -684,8 +684,8 @@
             // 
             this.groupBox10.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox10.Controls.Add(this.btnExportWrongList);
             this.groupBox10.Controls.Add(this.lblWrongProbTags);
+            this.groupBox10.Controls.Add(this.btnExportWrongList);
             this.groupBox10.Controls.Add(this.lblWrongProbDiff);
             this.groupBox10.Controls.Add(this.lblWrongProbTitle);
             this.groupBox10.Controls.Add(this.lblWrongProbNum);
@@ -717,15 +717,6 @@
             this.btnExportWrongList.Text = "📄 요약본 내보내기";
             this.btnExportWrongList.UseVisualStyleBackColor = false;
             this.btnExportWrongList.Click += new System.EventHandler(this.btnExportWrongList_Click);
-            // 
-            // lblWrongProbTags
-            // 
-            this.lblWrongProbTags.AutoSize = true;
-            this.lblWrongProbTags.Location = new System.Drawing.Point(84, 242);
-            this.lblWrongProbTags.MaximumSize = new System.Drawing.Size(145, 0);
-            this.lblWrongProbTags.Name = "lblWrongProbTags";
-            this.lblWrongProbTags.Size = new System.Drawing.Size(0, 23);
-            this.lblWrongProbTags.TabIndex = 28;
             // 
             // lblWrongProbDiff
             // 
@@ -921,7 +912,7 @@
             this.tabPage2.Controls.Add(this.groupBox5);
             this.tabPage2.Location = new System.Drawing.Point(4, 35);
             this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
             this.tabPage2.Size = new System.Drawing.Size(1103, 582);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "코드 작성";
@@ -1171,7 +1162,7 @@
             this.tabPage1.Controls.Add(this.groupBox2);
             this.tabPage1.Location = new System.Drawing.Point(4, 35);
             this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
             this.tabPage1.Size = new System.Drawing.Size(1103, 582);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "문제 탐색";
@@ -1181,8 +1172,8 @@
             // 
             this.groupBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox3.Controls.Add(this.lblDarkMode);
             this.groupBox3.Controls.Add(this.lblSelProbTags);
+            this.groupBox3.Controls.Add(this.lblDarkMode);
             this.groupBox3.Controls.Add(this.lblSelProbDiff);
             this.groupBox3.Controls.Add(this.lblSelProbTitle);
             this.groupBox3.Controls.Add(this.lblSelProbNum);
@@ -1211,15 +1202,6 @@
             this.lblDarkMode.TabIndex = 3;
             this.lblDarkMode.Text = "🌙 다크 모드";
             this.lblDarkMode.Click += new System.EventHandler(this.lblDarkMode_Click);
-            // 
-            // lblSelProbTags
-            // 
-            this.lblSelProbTags.AutoSize = true;
-            this.lblSelProbTags.Location = new System.Drawing.Point(86, 273);
-            this.lblSelProbTags.MaximumSize = new System.Drawing.Size(110, 0);
-            this.lblSelProbTags.Name = "lblSelProbTags";
-            this.lblSelProbTags.Size = new System.Drawing.Size(0, 23);
-            this.lblSelProbTags.TabIndex = 8;
             // 
             // lblSelProbDiff
             // 
@@ -1514,6 +1496,26 @@
             this.tabControl1.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.tabControl1_DrawItem);
             this.tabControl1.Click += new System.EventHandler(this.tabControl1_SelectedIndexChanged);
             // 
+            // lblSelProbTags
+            // 
+            this.lblSelProbTags.AutoEllipsis = true;
+            this.lblSelProbTags.AutoSize = true;
+            this.lblSelProbTags.Location = new System.Drawing.Point(86, 273);
+            this.lblSelProbTags.MaximumSize = new System.Drawing.Size(110, 0);
+            this.lblSelProbTags.Name = "lblSelProbTags";
+            this.lblSelProbTags.Size = new System.Drawing.Size(0, 23);
+            this.lblSelProbTags.TabIndex = 8;
+            // 
+            // lblWrongProbTags
+            // 
+            this.lblWrongProbTags.AutoEllipsis = true;
+            this.lblWrongProbTags.AutoSize = true;
+            this.lblWrongProbTags.Location = new System.Drawing.Point(84, 242);
+            this.lblWrongProbTags.MaximumSize = new System.Drawing.Size(145, 0);
+            this.lblWrongProbTags.Name = "lblWrongProbTags";
+            this.lblWrongProbTags.Size = new System.Drawing.Size(0, 23);
+            this.lblWrongProbTags.TabIndex = 30;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
@@ -1614,7 +1616,6 @@
         private System.Windows.Forms.TabPage tabPage3;
         private System.Windows.Forms.GroupBox groupBox10;
         private System.Windows.Forms.Button btnExportWrongList;
-        private System.Windows.Forms.Label lblWrongProbTags;
         private System.Windows.Forms.Label lblWrongProbDiff;
         private System.Windows.Forms.Label lblWrongProbTitle;
         private System.Windows.Forms.Label lblWrongProbNum;
@@ -1659,7 +1660,6 @@
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.Label lblDarkMode;
-        private System.Windows.Forms.Label lblSelProbTags;
         private System.Windows.Forms.Label lblSelProbDiff;
         private System.Windows.Forms.Label lblSelProbTitle;
         private System.Windows.Forms.Label lblSelProbNum;
@@ -1690,6 +1690,8 @@
         private System.Windows.Forms.RadioButton rbAll;
         private System.Windows.Forms.RadioButton rbWrong;
         private System.Windows.Forms.RadioButton rbCorrect;
+        private System.Windows.Forms.Label lblWrongProbTags;
+        private System.Windows.Forms.Label lblSelProbTags;
     }
 }
 

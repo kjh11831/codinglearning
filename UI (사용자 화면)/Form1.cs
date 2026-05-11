@@ -814,7 +814,12 @@ namespace codinglearning
                     if (isDarkMode) { c.BackColor = Color.FromArgb(60, 60, 65); c.ForeColor = Color.White; }
                     else { c.BackColor = box; c.ForeColor = text; }
                     if (c is ComboBox cb) cb.FlatStyle = FlatStyle.Flat;
-                    if (c is TextBox tb) tb.BorderStyle = isDarkMode ? BorderStyle.FixedSingle : BorderStyle.Fixed3D;
+
+                    // ⭐ 텍스트박스 예외처리 다 지우고 원상복구!
+                    if (c is TextBox tb)
+                    {
+                        tb.BorderStyle = isDarkMode ? BorderStyle.FixedSingle : BorderStyle.Fixed3D;
+                    }
                 }
                 else if (c is DataGridView dgv)
                 {

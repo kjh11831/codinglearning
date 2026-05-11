@@ -32,7 +32,11 @@ namespace codinglearning.Managers
                 using (Process process = Process.Start(processInfo))
                 {
                     process.WaitForExit();
+
+                    // 에러 스트림과 일반 출력 스트림을 모두 읽어옵니다.
                     string error = process.StandardError.ReadToEnd();
+                    string output = process.StandardOutput.ReadToEnd();
+                    string fullMessage = (output + "\n" + error).Trim();
 
                     if (process.ExitCode == 0)
                     {
@@ -40,10 +44,20 @@ namespace codinglearning.Managers
                     }
                     else
                     {
-                        if (error.Contains("nothing to commit") || error.Contains("working tree clean"))
+                        // 영어 및 한국어 Git 메시지 모두 대응
+                        if (fullMessage.Contains("nothing to commit") ||
+                            fullMessage.Contains("working tree clean") ||
+                            fullMessage.Contains("커밋할 사항 없음") ||
+                            fullMessage.Contains("변경 사항 없음") ||
+                            fullMessage.Contains("작업 폴더 깨끗함"))
+                        {
                             return (false, "새로 추가되거나 변경된 코드가 없습니다.", true);
+                        }
                         else
-                            return (false, $"❌ 업로드 실패.\n(원인: {error})", false);
+                        {
+                            // 이제 진짜 에러 원인이 팝업에 표시됩니다.
+                            return (false, $"❌ 업로드 실패.\n(원인: {fullMessage})", false);
+                        }
                     }
                 }
             }
