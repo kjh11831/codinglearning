@@ -14,13 +14,13 @@ namespace codinglearning
 {
     public partial class Form1 : Form
     {
-        // ⭐ 매니저 및 서비스 객체 생성 (새로 추가된 클래스 포함)
-        private LearningSessionManager sessionManager = new LearningSessionManager();
-        private GitHubManager gitHubManager = new GitHubManager();
-        private FileManager fileManager = new FileManager();
-        private FirebaseManager firebaseManager = new FirebaseManager();
-        private ApiService apiService = new ApiService();
-        private GeminiService geminiService = new GeminiService();
+        // 1. 선언만 수행 (디자이너가 폼을 읽을 때 오류 발생 방지)
+        private LearningSessionManager sessionManager;
+        private GitHubManager gitHubManager;
+        private FileManager fileManager;
+        private FirebaseManager firebaseManager;
+        private ApiService apiService;
+        private GeminiService geminiService;
 
         private string selId = "", selTitle = "", selDiff = "", selTags = "";
         private bool isSearching = false;
@@ -37,6 +37,14 @@ namespace codinglearning
         public Form1()
         {
             InitializeComponent();
+
+            // 2. 생성자 내부에서 실제 객체 할당
+            sessionManager = new LearningSessionManager();
+            gitHubManager = new GitHubManager();
+            fileManager = new FileManager();
+            firebaseManager = new FirebaseManager();
+            apiService = new ApiService();
+            geminiService = new GeminiService();
         }
 
         #region [ 1. 공통 및 하단 상태 표시줄 ]
