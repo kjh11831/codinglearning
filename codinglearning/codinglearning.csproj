@@ -72,19 +72,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ApiService.cs" />
-    <Compile Include="FirebaseManager.cs" />
-    <Compile Include="LearningSessionManager.cs" />
-    <Compile Include="Models.cs" />
-    <Compile Include="Form1.cs">
+    <Compile Include="Services %28API 및 Firebase 통신%29\ApiService.cs" />
+    <Compile Include="Services %28API 및 Firebase 통신%29\FirebaseManager.cs" />
+    <Compile Include="Managers %28로직 및 상태, 파일, 깃허브 관리%29\FileManager.cs" />
+    <Compile Include="Managers %28로직 및 상태, 파일, 깃허브 관리%29\GitHubManager.cs" />
+    <Compile Include="Managers %28로직 및 상태, 파일, 깃허브 관리%29\LearningSessionManager.cs" />
+    <Compile Include="Models %28데이터 구조%29\Models.cs" />
+    <Compile Include="UI %28사용자 화면%29\Form1.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form1.Designer.cs">
+    <Compile Include="UI %28사용자 화면%29\Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="Form1.resx">
+    <Compile Include="Services %28API 및 Firebase 통신%29\GeminiService.cs" />
+    <EmbeddedResource Include="UI %28사용자 화면%29\Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -110,6 +113,7 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets" Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

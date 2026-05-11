@@ -2,7 +2,6 @@
 
 namespace codinglearning.Models
 {
-    // Firebase에 저장할 세션 데이터[cite: 1]
     public class SessionData
     {
         public string status { get; set; }
@@ -11,7 +10,6 @@ namespace codinglearning.Models
         public string lastActiveTime { get; set; }
     }
 
-    // 풀이 시도 기록 데이터[cite: 1]
     public class SubmissionRecord
     {
         public string code { get; set; }
@@ -21,14 +19,13 @@ namespace codinglearning.Models
         public string title { get; set; }
     }
 
-    // 오답 노트 데이터[cite: 1]
     public class WrongProblemData
     {
         public string title { get; set; }
         public string diff { get; set; }
         public string tags { get; set; }
         public string addedDate { get; set; }
-        public string reviewDate { get; set; } // 다음 복습 예정일
+        public string reviewDate { get; set; }
         public bool solvedAfter { get; set; }
     }
 }

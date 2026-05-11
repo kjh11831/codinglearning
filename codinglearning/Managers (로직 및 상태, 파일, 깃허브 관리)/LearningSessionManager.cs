@@ -26,7 +26,6 @@ namespace codinglearning.Managers
 
         public void UpdateIdleState()
         {
-            // 5분 이상 무반응 시 Idle 상태로 전환[cite: 1]
             if (CurrentStatus == "Active" && (DateTime.Now - LastActiveTime).TotalMinutes > 5)
             {
                 CurrentStatus = "Idle";
