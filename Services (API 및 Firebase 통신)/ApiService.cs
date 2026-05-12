@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -97,9 +98,11 @@ namespace codinglearning.Services
             return (isCorrect, msg);
         }
 
-
-        public async Task<(string input, string output, string errorMessage)> FetchSampleDataFromWebAsync(string problemId)
+        public async Task<(List<string> inputs, List<string> outputs, string errorMessage)> FetchSampleDataFromWebAsync(string problemId)
         {
+            List<string> inputs = new List<string>();
+            List<string> outputs = new List<string>();
+
             try
             {
                 string contestId = new String(problemId.Where(Char.IsDigit).ToArray());
@@ -110,35 +113,38 @@ namespace codinglearning.Services
                 using (var request = new HttpRequestMessage(HttpMethod.Get, url))
                 {
                     request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-
                     var response = await httpClient.SendAsync(request);
 
                     if (!response.IsSuccessStatusCode)
                     {
-                        return ("", "", $"서버 접근 거부 (상태 코드: {(int)response.StatusCode})");
+                        return (null, null, $"서버 접근 거부 (상태 코드: {(int)response.StatusCode})");
                     }
 
                     string html = await response.Content.ReadAsStringAsync();
 
-                    // 정규식으로 <div class="input"> 안의 <pre> 내용 추출
-                    Match inputMatch = Regex.Match(html, @"<div class=""input"">.*?<pre>(.*?)</pre>", RegexOptions.Singleline | RegexOptions.IgnoreCase);
-                    Match outputMatch = Regex.Match(html, @"<div class=""output"">.*?<pre>(.*?)</pre>", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+                    // 🌟 Match가 아닌 Matches를 사용하여 페이지 내의 모든 예제를 찾습니다.
+                    MatchCollection inputMatches = Regex.Matches(html, @"<div class=""input"">.*?<pre>(.*?)</pre>", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+                    MatchCollection outputMatches = Regex.Matches(html, @"<div class=""output"">.*?<pre>(.*?)</pre>", RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
-                    if (inputMatch.Success && outputMatch.Success)
+                    // 입력과 출력 예제의 개수가 동일하고 1개 이상일 때만 성공으로 간주
+                    if (inputMatches.Count > 0 && outputMatches.Count > 0 && inputMatches.Count == outputMatches.Count)
                     {
-                        string input = CleanHtmlText(inputMatch.Groups[1].Value);
-                        string output = CleanHtmlText(outputMatch.Groups[1].Value);
-                        return (input, output, ""); // 에러 없음!
+                        for (int i = 0; i < inputMatches.Count; i++)
+                        {
+                            inputs.Add(CleanHtmlText(inputMatches[i].Groups[1].Value));
+                            outputs.Add(CleanHtmlText(outputMatches[i].Groups[1].Value));
+                        }
+                        return (inputs, outputs, ""); // 에러 없음!
                     }
                     else
                     {
-                        return ("", "", "Codeforces 페이지의 HTML 구조가 변경되어 예제 데이터를 찾지 못했습니다.");
+                        return (null, null, "Codeforces 페이지에서 예제 데이터를 찾지 못했거나 입출력 쌍이 맞지 않습니다.");
                     }
                 }
             }
             catch (Exception ex)
             {
-                return ("", "", $"네트워크 통신 오류: {ex.Message}");
+                return (null, null, $"네트워크 통신 오류: {ex.Message}");
             }
         }
 

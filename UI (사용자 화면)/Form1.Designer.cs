@@ -29,12 +29,12 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend3 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend4 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblTimer = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
@@ -81,6 +81,7 @@
             this.rbCorrect = new System.Windows.Forms.RadioButton();
             this.rbAll = new System.Windows.Forms.RadioButton();
             this.groupBox10 = new System.Windows.Forms.GroupBox();
+            this.lblWrongProbTags = new System.Windows.Forms.Label();
             this.btnExportWrongList = new System.Windows.Forms.Button();
             this.lblWrongProbDiff = new System.Windows.Forms.Label();
             this.lblWrongProbTitle = new System.Windows.Forms.Label();
@@ -125,6 +126,7 @@
             this.label16 = new System.Windows.Forms.Label();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.lblSelProbTags = new System.Windows.Forms.Label();
             this.lblDarkMode = new System.Windows.Forms.Label();
             this.lblSelProbDiff = new System.Windows.Forms.Label();
             this.lblSelProbTitle = new System.Windows.Forms.Label();
@@ -152,8 +154,6 @@
             this.Tags = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Result = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.lblSelProbTags = new System.Windows.Forms.Label();
-            this.lblWrongProbTags = new System.Windows.Forms.Label();
             this.statusStrip1.SuspendLayout();
             this.tabPage5.SuspendLayout();
             this.groupBox14.SuspendLayout();
@@ -231,7 +231,7 @@
             this.lblGitHubPush.Location = new System.Drawing.Point(977, 624);
             this.lblGitHubPush.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblGitHubPush.Name = "lblGitHubPush";
-            this.lblGitHubPush.Size = new System.Drawing.Size(119, 23);
+            this.lblGitHubPush.Size = new System.Drawing.Size(113, 23);
             this.lblGitHubPush.TabIndex = 2;
             this.lblGitHubPush.Text = "🌱 잔디 심기";
             this.lblGitHubPush.Click += new System.EventHandler(this.lblGitHubPush_Click);
@@ -399,17 +399,17 @@
             this.chartTimeHistory.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            chartArea3.Name = "ChartArea1";
-            this.chartTimeHistory.ChartAreas.Add(chartArea3);
-            legend3.Name = "Legend1";
-            this.chartTimeHistory.Legends.Add(legend3);
+            chartArea1.Name = "ChartArea1";
+            this.chartTimeHistory.ChartAreas.Add(chartArea1);
+            legend1.Name = "Legend1";
+            this.chartTimeHistory.Legends.Add(legend1);
             this.chartTimeHistory.Location = new System.Drawing.Point(15, 29);
             this.chartTimeHistory.Name = "chartTimeHistory";
-            series3.ChartArea = "ChartArea1";
-            series3.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
-            series3.Legend = "Legend1";
-            series3.Name = "Series1";
-            this.chartTimeHistory.Series.Add(series3);
+            series1.ChartArea = "ChartArea1";
+            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
+            series1.Legend = "Legend1";
+            series1.Name = "Series1";
+            this.chartTimeHistory.Series.Add(series1);
             this.chartTimeHistory.Size = new System.Drawing.Size(1046, 247);
             this.chartTimeHistory.TabIndex = 0;
             this.chartTimeHistory.Text = "chart1";
@@ -508,17 +508,17 @@
             this.chartAccuracy.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            chartArea4.Name = "ChartArea1";
-            this.chartAccuracy.ChartAreas.Add(chartArea4);
-            legend4.Name = "Legend1";
-            this.chartAccuracy.Legends.Add(legend4);
+            chartArea2.Name = "ChartArea1";
+            this.chartAccuracy.ChartAreas.Add(chartArea2);
+            legend2.Name = "Legend1";
+            this.chartAccuracy.Legends.Add(legend2);
             this.chartAccuracy.Location = new System.Drawing.Point(15, 29);
             this.chartAccuracy.Name = "chartAccuracy";
-            series4.ChartArea = "ChartArea1";
-            series4.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
-            series4.Legend = "Legend1";
-            series4.Name = "Series1";
-            this.chartAccuracy.Series.Add(series4);
+            series2.ChartArea = "ChartArea1";
+            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
+            series2.Legend = "Legend1";
+            series2.Name = "Series1";
+            this.chartAccuracy.Series.Add(series2);
             this.chartAccuracy.Size = new System.Drawing.Size(1046, 252);
             this.chartAccuracy.TabIndex = 0;
             this.chartAccuracy.Text = "chart1";
@@ -704,6 +704,16 @@
             this.groupBox10.TabIndex = 1;
             this.groupBox10.TabStop = false;
             this.groupBox10.Text = "선택된 문제 정보";
+            // 
+            // lblWrongProbTags
+            // 
+            this.lblWrongProbTags.AutoEllipsis = true;
+            this.lblWrongProbTags.AutoSize = true;
+            this.lblWrongProbTags.Location = new System.Drawing.Point(84, 242);
+            this.lblWrongProbTags.MaximumSize = new System.Drawing.Size(145, 0);
+            this.lblWrongProbTags.Name = "lblWrongProbTags";
+            this.lblWrongProbTags.Size = new System.Drawing.Size(0, 23);
+            this.lblWrongProbTags.TabIndex = 30;
             // 
             // btnExportWrongList
             // 
@@ -955,6 +965,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.txtResult.Location = new System.Drawing.Point(13, 29);
             this.txtResult.Name = "txtResult";
+            this.txtResult.ReadOnly = true;
             this.txtResult.Size = new System.Drawing.Size(1043, 28);
             this.txtResult.TabIndex = 1;
             this.txtResult.Text = "";
@@ -1190,6 +1201,16 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "선택된 문제";
             // 
+            // lblSelProbTags
+            // 
+            this.lblSelProbTags.AutoEllipsis = true;
+            this.lblSelProbTags.AutoSize = true;
+            this.lblSelProbTags.Location = new System.Drawing.Point(86, 273);
+            this.lblSelProbTags.MaximumSize = new System.Drawing.Size(110, 0);
+            this.lblSelProbTags.Name = "lblSelProbTags";
+            this.lblSelProbTags.Size = new System.Drawing.Size(0, 23);
+            this.lblSelProbTags.TabIndex = 8;
+            // 
             // lblDarkMode
             // 
             this.lblDarkMode.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -1198,7 +1219,7 @@
             this.lblDarkMode.Location = new System.Drawing.Point(100, -11);
             this.lblDarkMode.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.lblDarkMode.Name = "lblDarkMode";
-            this.lblDarkMode.Size = new System.Drawing.Size(91, 23);
+            this.lblDarkMode.Size = new System.Drawing.Size(113, 23);
             this.lblDarkMode.TabIndex = 3;
             this.lblDarkMode.Text = "🌙 다크 모드";
             this.lblDarkMode.Click += new System.EventHandler(this.lblDarkMode_Click);
@@ -1369,7 +1390,7 @@
             this.label3.AutoSize = true;
             this.label3.Location = new System.Drawing.Point(344, 39);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(73, 23);
+            this.label3.Size = new System.Drawing.Size(67, 23);
             this.label3.TabIndex = 1;
             this.label3.Text = "키워드";
             this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -1495,26 +1516,6 @@
             this.tabControl1.TabIndex = 0;
             this.tabControl1.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.tabControl1_DrawItem);
             this.tabControl1.Click += new System.EventHandler(this.tabControl1_SelectedIndexChanged);
-            // 
-            // lblSelProbTags
-            // 
-            this.lblSelProbTags.AutoEllipsis = true;
-            this.lblSelProbTags.AutoSize = true;
-            this.lblSelProbTags.Location = new System.Drawing.Point(86, 273);
-            this.lblSelProbTags.MaximumSize = new System.Drawing.Size(110, 0);
-            this.lblSelProbTags.Name = "lblSelProbTags";
-            this.lblSelProbTags.Size = new System.Drawing.Size(0, 23);
-            this.lblSelProbTags.TabIndex = 8;
-            // 
-            // lblWrongProbTags
-            // 
-            this.lblWrongProbTags.AutoEllipsis = true;
-            this.lblWrongProbTags.AutoSize = true;
-            this.lblWrongProbTags.Location = new System.Drawing.Point(84, 242);
-            this.lblWrongProbTags.MaximumSize = new System.Drawing.Size(145, 0);
-            this.lblWrongProbTags.Name = "lblWrongProbTags";
-            this.lblWrongProbTags.Size = new System.Drawing.Size(0, 23);
-            this.lblWrongProbTags.TabIndex = 30;
             // 
             // Form1
             // 

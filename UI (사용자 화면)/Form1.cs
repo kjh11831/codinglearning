@@ -255,28 +255,56 @@ namespace codinglearning
             if (string.IsNullOrEmpty(selId)) { MessageBox.Show("문제를 먼저 선택해주세요!"); return; }
 
             isRunningSample = true;
-
             try
             {
                 string currentLang = cbLanguage.SelectedItem.ToString();
-
                 btnRunSample.Text = "예제 가져오는 중...";
 
-                // 🌟 수정된 크롤링 메서드 호출 (에러 메시지까지 받아옴)
-                var (sampleInput, sampleOutput, errorMsg) = await apiService.FetchSampleDataFromWebAsync(selId);
+                // 🌟 List 형태로 여러 개의 예제를 받아옵니다.
+                var (sampleInputs, sampleOutputs, errorMsg) = await apiService.FetchSampleDataFromWebAsync(selId);
 
-                // 에러 메시지가 비어있지 않다면(즉, 무언가 문제가 생겼다면)
-                if (!string.IsNullOrEmpty(errorMsg))
+                if (!string.IsNullOrEmpty(errorMsg) || sampleInputs == null)
                 {
                     txtResult.Text = $"❌ 예제 가져오기 실패\n원인: {errorMsg}\n\n(공식 사이트의 예제 복사 버튼을 이용하시거나 나중에 다시 시도해주세요.)";
                     return;
                 }
 
                 btnRunSample.Text = "채점 중...";
-                var (isCorrect, message) = await apiService.RunJudge0Async(txtCode.Text, currentLang, sampleInput, sampleOutput);
+                txtResult.Text = $"총 {sampleInputs.Count}개의 예제 테스트를 시작합니다...\r\n\r\n";
 
-                txtResult.Text = message;
-                fileManager.SaveCodeToLocalFile(selId, selTitle, txtCode.Text, currentLang, isCorrect);
+                bool allCorrect = true;
+                string finalMessage = "";
+
+                // 🌟 받아온 모든 예제에 대해 반복문을 돌며 순차적으로 채점합니다.
+                for (int i = 0; i < sampleInputs.Count; i++)
+                {
+                    txtResult.AppendText($"⏳ [Test Case {i + 1}] 채점 중...\r\n");
+
+                    var (isCorrect, message) = await apiService.RunJudge0Async(txtCode.Text, currentLang, sampleInputs[i], sampleOutputs[i]);
+
+                    if (!isCorrect)
+                    {
+                        allCorrect = false;
+                        // 틀린 케이스가 나오면 즉시 중단하고 해당 케이스의 에러 메시지를 보여줌
+                        finalMessage = $"\r\n❌ [Test Case {i + 1}] 실패\n\n{message}";
+                        break;
+                    }
+                    else
+                    {
+                        txtResult.AppendText($"✅ [Test Case {i + 1}] 통과!\r\n");
+                    }
+                }
+
+                // 반복문이 끝난 후, 모든 테스트를 통과했다면
+                if (allCorrect)
+                {
+                    finalMessage = $"\r\n🎉 완벽합니다! 모든 예제({sampleInputs.Count}개)를 성공적으로 통과했습니다.\n이제 공식 사이트에 제출해 보세요!";
+                }
+
+                txtResult.AppendText(finalMessage);
+
+                // 파일 저장은 모든 예제를 통과했는지 여부(allCorrect)를 기준으로 진행
+                fileManager.SaveCodeToLocalFile(selId, selTitle, txtCode.Text, currentLang, allCorrect);
             }
             catch (Exception ex)
             {
