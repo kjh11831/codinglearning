@@ -22,12 +22,15 @@ namespace codinglearning.Managers
                 processInfo.WorkingDirectory = targetFolder;
 
                 string commitMessage = $"Auto commit: {DateTime.Now.ToString("yyyy-MM-dd HH:mm")} 학습 기록";
-                processInfo.Arguments = $"/c git add . && git commit -m \"{commitMessage}\" && git push";
+                processInfo.Arguments = $"/c git add . && git commit -m \"{commitMessage}\" && git push -u origin main";
 
                 processInfo.CreateNoWindow = true;
                 processInfo.UseShellExecute = false;
                 processInfo.RedirectStandardOutput = true;
                 processInfo.RedirectStandardError = true;
+
+                processInfo.StandardOutputEncoding = System.Text.Encoding.UTF8;
+                processInfo.StandardErrorEncoding = System.Text.Encoding.UTF8;
 
                 using (Process process = Process.Start(processInfo))
                 {

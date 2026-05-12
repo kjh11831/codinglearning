@@ -82,15 +82,33 @@ Code to translate:
 
                     string responseString = await response.Content.ReadAsStringAsync();
                     var responseObject = JObject.Parse(responseString);
-                    string translatedCode = responseObject["candidates"][0]["content"]["parts"][0]["text"].ToString().Trim();
 
-                    if (translatedCode.StartsWith("```"))
+                    // 기존 오류 원인: responseObject["candidates"][0]... 처럼 직접 접근하면 중간에 키가 없을 때 프로그램이 뻗어버림.
+                    // 해결: '?.' (Null 조건부 연산자)를 사용하여 안전하게 텍스트 추출.
+                    // 만약 candidates 배열이 비어있거나, parts 키가 없다면 에러를 내뿜는 대신 textToken에 null을 반환함.
+                    var textToken = responseObject["candidates"]?[0]?["content"]?["parts"]?[0]?["text"];
+
+                    if (textToken != null) // 안전하게 텍스트를 찾았을 때만 실행
                     {
-                        var lines = translatedCode.Split('\n');
-                        translatedCode = string.Join("\n", lines.Skip(1).Take(lines.Length - 2));
-                    }
+                        string translatedCode = textToken.ToString().Trim();
 
-                    return (true, translatedCode.TrimEnd());
+                        // 마크다운 코드 블록 제거 로직
+                        if (translatedCode.StartsWith("```"))
+                        {
+                            var lines = translatedCode.Split('\n');
+                            translatedCode = string.Join("\n", lines.Skip(1).Take(lines.Length - 2));
+                        }
+
+                        return (true, translatedCode.TrimEnd());
+                    }
+                    else // API가 예상과 다른 구조를 반환했을 때 (예: 안전 필터링 차단, 빈 응답 등)
+                    {
+                        // 에러 원인을 추적하기 위해 finishReason(종료 사유)를 추출해봄.
+                        string finishReason = responseObject["candidates"]?[0]?["finishReason"]?.ToString() ?? "Unknown";
+
+                        // 프로그램이 뻗는 대신 false를 반환하고, Form1.cs에서 에러 메시지를 띄워주도록 처리.
+                        return (false, $"번역 결과가 비어있습니다. (사유: {finishReason})\n서버 응답: {responseString}");
+                    }
                 }
             }
             catch (Exception ex)

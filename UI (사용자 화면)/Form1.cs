@@ -252,39 +252,33 @@ namespace codinglearning
         private async void btnRunSample_Click(object sender, EventArgs e)
         {
             if (isRunningSample) return;
-            sessionManager.RecordUserAction();
-            if (string.IsNullOrEmpty(selId)) { MessageBox.Show("먼저 문제를 선택해주세요!"); return; }
+            if (string.IsNullOrEmpty(selId)) { MessageBox.Show("문제를 먼저 선택해주세요!"); return; }
 
             isRunningSample = true;
-            btnRunSample.Text = "실행 중...";
-            btnRunSample.ForeColor = isDarkMode ? Color.White : SystemColors.ControlText;
-            btnRunSample.Refresh();
-            txtResult.Text = "Judge0 서버에 채점 요청 중...";
+            btnRunSample.Text = "채점 중...";
 
             try
             {
                 string currentLang = cbLanguage.SelectedItem.ToString();
-                var (isCorrect, message) = await apiService.RunJudge0Async(txtCode.Text, currentLang);
+
+                // 일단 테스트를 위한 임시 예제 데이터 (2223D 문제 기준)
+                string sampleInput = "5\n7\n1 3 6 3 2 1 5\n";
+                string sampleOutput = "Yes\n7 5 2 4 3 6 1";
+
+                var (isCorrect, message) = await apiService.RunJudge0Async(txtCode.Text, currentLang, sampleInput, sampleOutput);
+
                 txtResult.Text = message;
-
-                // ⭐ FileManager를 사용해 로컬 파일 자동 저장
                 fileManager.SaveCodeToLocalFile(selId, selTitle, txtCode.Text, currentLang, isCorrect);
-
-                var record = new SubmissionRecord
-                {
-                    code = txtCode.Text,
-                    status = isCorrect ? "correct" : "wrong",
-                    language = currentLang,
-                    date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                    title = selTitle
-                };
-
-                string safeLang = currentLang.Replace("#", "Sharp").Replace("+", "p");
-                string uniqueKey = $"{selId}_{safeLang}";
-                await firebaseManager.SaveSubmissionAsync(uniqueKey, record, selDiff, selTags);
             }
-            catch (Exception ex) { txtResult.Text = $"채점 서버 통신 오류: {ex.Message}"; }
-            finally { isRunningSample = false; btnRunSample.Text = "예제 테스트 실행"; }
+            catch (Exception ex)
+            {
+                txtResult.Text = $"채점 오류: {ex.Message}";
+            }
+            finally
+            {
+                isRunningSample = false;
+                btnRunSample.Text = "예제 테스트 실행";
+            }
         }
 
         private void btnSubmitCF_Click(object sender, EventArgs e)
