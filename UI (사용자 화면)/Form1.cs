@@ -975,9 +975,20 @@ namespace codinglearning
         }
         #endregion
 
-        private async void rbAll_CheckedChanged(object sender, EventArgs e) { if (rbAll.Checked) await LoadWrongListUI(); }
-        private async void rbCorrect_CheckedChanged(object sender, EventArgs e) { if (rbCorrect.Checked) await LoadWrongListUI(); }
-        private async void rbWrong_CheckedChanged(object sender, EventArgs e) { if (rbWrong.Checked) await LoadWrongListUI(); }
+        private async void rbAll_CheckedChanged(object sender, EventArgs e)
+        {
+            if (rbAll.Checked) await LoadWrongListUI();
+        }
+
+        private async void rbCorrect_CheckedChanged(object sender, EventArgs e)
+        {
+            if (rbCorrect.Checked) await LoadWrongListUI();
+        }
+
+        private async void rbWrong_CheckedChanged(object sender, EventArgs e)
+        {
+            if (rbWrong.Checked) await LoadWrongListUI();
+        }
 
         private async void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
