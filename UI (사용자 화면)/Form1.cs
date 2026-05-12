@@ -255,16 +255,24 @@ namespace codinglearning
             if (string.IsNullOrEmpty(selId)) { MessageBox.Show("문제를 먼저 선택해주세요!"); return; }
 
             isRunningSample = true;
-            btnRunSample.Text = "채점 중...";
 
             try
             {
                 string currentLang = cbLanguage.SelectedItem.ToString();
 
-                // 일단 테스트를 위한 임시 예제 데이터 (2223D 문제 기준)
-                string sampleInput = "5\n7\n1 3 6 3 2 1 5\n";
-                string sampleOutput = "Yes\n7 5 2 4 3 6 1";
+                btnRunSample.Text = "예제 가져오는 중...";
 
+                // 🌟 수정된 크롤링 메서드 호출 (에러 메시지까지 받아옴)
+                var (sampleInput, sampleOutput, errorMsg) = await apiService.FetchSampleDataFromWebAsync(selId);
+
+                // 에러 메시지가 비어있지 않다면(즉, 무언가 문제가 생겼다면)
+                if (!string.IsNullOrEmpty(errorMsg))
+                {
+                    txtResult.Text = $"❌ 예제 가져오기 실패\n원인: {errorMsg}\n\n(공식 사이트의 예제 복사 버튼을 이용하시거나 나중에 다시 시도해주세요.)";
+                    return;
+                }
+
+                btnRunSample.Text = "채점 중...";
                 var (isCorrect, message) = await apiService.RunJudge0Async(txtCode.Text, currentLang, sampleInput, sampleOutput);
 
                 txtResult.Text = message;
@@ -272,7 +280,7 @@ namespace codinglearning
             }
             catch (Exception ex)
             {
-                txtResult.Text = $"채점 오류: {ex.Message}";
+                txtResult.Text = $"오류 발생: {ex.Message}";
             }
             finally
             {
@@ -878,8 +886,8 @@ namespace codinglearning
             {
                 case "C#": return "using System;\n\nnamespace CodingTest\n{\n    class Program\n    {\n        static void Main(string[] args)\n        {\n            // 여기에 코드를 작성하세요\n            \n        }\n    }\n}";
                 case "C++": return "#include <iostream>\nusing namespace std;\n\nint main() {\n    // 여기에 코드를 작성하세요\n    \n    return 0;\n}";
-                case "Java": return "import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        // 여기에 코드를 작성하세요\n        \n    }\n}";
-                case "Python": return "def main():\n    # 여기에 코드를 작성하세요\n    pass\n\nif __name__ == '__main__':\n    main()";
+                case "Java": return "public class Main {\n    public static void main(String[] args) {\n        // 여기에 코드를 작성하세요\n        \n    }\n}";
+                case "Python": return "";
                 default: return "";
             }
         }
