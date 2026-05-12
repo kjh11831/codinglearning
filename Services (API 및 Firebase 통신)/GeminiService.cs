@@ -10,7 +10,7 @@ namespace codinglearning.Services
 {
     public class GeminiService
     {
-        private readonly string apiKey = "AIzaSyBILQSzq5R9itj3eRWIcl_Q_pJwHOp6JJ8".Trim();
+        private readonly string apiKey = "AIzaSyBHLbgljhk8AJ8dbnMvwbdFyLfVpwFGujI".Trim();
 
         // UI에 상태를 전달하기 위해 Action<string> onProgress를 매개변수로 받음
         public async Task<(bool isSuccess, string resultText)> TranslateCodeAsync(string code, string sourceLang, string targetLang, Action<string> onProgress)
