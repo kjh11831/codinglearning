@@ -1,10 +1,12 @@
 ﻿using codinglearning.Managers;
 using codinglearning.Models;
 using codinglearning.Services;
+using Microsoft.Web.WebView2.Core;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -21,6 +23,8 @@ namespace codinglearning
         private FirebaseManager firebaseManager;
         private ApiService apiService;
         private GeminiService geminiService;
+
+        private Microsoft.Web.WebView2.WinForms.WebView2 webViewCF;
 
         private string selId = "", selTitle = "", selDiff = "", selTags = "";
         private bool isSearching = false;
@@ -47,8 +51,34 @@ namespace codinglearning
             geminiService = new GeminiService();
         }
 
+        private void CoreWebView2_NavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
+        {
+            string currentUrl = webViewCF.Source.ToString();
+
+            // A. 로그인 페이지로 리다이렉트 된 경우 (로그인 필요)
+            if (currentUrl.Contains("codeforces.com/enter"))
+            {
+                if (!webViewCF.Visible)
+                {
+                    webViewCF.Visible = true;
+                    webViewCF.BringToFront();
+                    // 사용자에게 알림을 줍니다.
+                    MessageBox.Show("코드포스 자동 제출을 위해 로그인이 필요합니다.\n창에서 로그인을 완료해 주세요.", "로그인 안내");
+                }
+            }
+            // B. 로그인에 성공하여 설정 페이지나 메인 페이지로 들어간 경우
+            else if (currentUrl.Contains("codeforces.com/settings") || currentUrl.Contains("codeforces.com/profile"))
+            {
+                if (webViewCF.Visible)
+                {
+                    webViewCF.Visible = false; // 로그인 성공했으니 다시 숨깁니다.
+                    MessageBox.Show("로그인 성공! 이제 자동으로 CF 제출이 가능합니다.", "알림");
+                }
+            }
+        }
+
         #region [ 1. 공통 및 하단 상태 표시줄 ]
-        private void Form1_Load(object sender, EventArgs e)
+        private async void Form1_Load(object sender, EventArgs e)
         {
             if (!firebaseManager.Initialize())
             {
@@ -64,6 +94,17 @@ namespace codinglearning
                 chartAccuracy.Series[0].Name = "풀이 통계";
             }
 
+            // 🌟 1. 코드로 WebView2 직접 생성 및 설정 (디자이너 개입 100% 차단)
+            webViewCF = new Microsoft.Web.WebView2.WinForms.WebView2();
+            webViewCF.Visible = false; // 처음엔 숨김
+            webViewCF.Dock = DockStyle.Fill;
+
+            // 🌟 2. 폼에 브라우저 컨트롤 부착!
+            this.Controls.Add(webViewCF);
+
+            // 🌟 3. 비동기로 안전하게 초기화 시작
+            await InitializeWebViewAsync();
+
             ApplyMinimalStyle();
             StartLearningSession();
 
@@ -76,6 +117,31 @@ namespace codinglearning
 
             ApplyTheme();
             this.FormClosing += Form1_FormClosing;
+        }
+
+        // 🌟 4. 이름 변경 및 Task 반환형으로 수정
+        private async Task InitializeWebViewAsync()
+        {
+            try
+            {
+                string userDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CodingLearning_WebView");
+
+                if (!System.IO.Directory.Exists(userDataFolder))
+                {
+                    System.IO.Directory.CreateDirectory(userDataFolder);
+                }
+
+                var environment = await Microsoft.Web.WebView2.Core.CoreWebView2Environment.CreateAsync(null, userDataFolder, null);
+
+                await webViewCF.EnsureCoreWebView2Async(environment);
+
+                webViewCF.CoreWebView2.NavigationCompleted += CoreWebView2_NavigationCompleted;
+                webViewCF.CoreWebView2.Navigate("https://codeforces.com/settings/general");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"WebView2 초기화 실패!\n\n에러 메시지: {ex.Message}", "초기화 오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void learningTimer_Tick(object sender, EventArgs e)
@@ -317,17 +383,101 @@ namespace codinglearning
             }
         }
 
-        private void btnSubmitCF_Click(object sender, EventArgs e)
+        private async void btnSubmitCF_Click(object sender, EventArgs e)
         {
             sessionManager.RecordUserAction();
-            if (!string.IsNullOrEmpty(selId))
-            {
-                string contestId = new String(selId.Where(Char.IsDigit).ToArray());
-                string url = $"https://codeforces.com/contest/{contestId}/submit";
 
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+            if (string.IsNullOrEmpty(selId))
+            {
+                MessageBox.Show("문제를 먼저 선택해주세요.");
+                return;
             }
-            else MessageBox.Show("문제를 먼저 선택해주세요.");
+
+            if (string.IsNullOrWhiteSpace(txtCode.Text))
+            {
+                MessageBox.Show("제출할 코드가 없습니다!");
+                return;
+            }
+
+            string currentLang = cbLanguage.SelectedItem.ToString();
+            // 1. 코드포스의 언어 ID 매핑 (현재 최신 기준 - 바뀔 수 있으니 CF 사이트의 언어 드롭다운 value값 참고 필요)
+            string cfLangId = "51"; // 기본값
+            if (currentLang == "C#") cfLangId = "65"; // C# Mono 또는 79 (.NET)
+            else if (currentLang == "C++") cfLangId = "54"; // GNU C++17
+            else if (currentLang == "Python") cfLangId = "71"; // Python 3
+            else if (currentLang == "Java") cfLangId = "60"; // Java 11
+
+            // 2. 제출 페이지 URL 조립
+            string contestId = new String(selId.Where(Char.IsDigit).ToArray());
+            string submitUrl = $"https://codeforces.com/contest/{contestId}/submit";
+
+            btnSubmitCF.Text = "제출 준비 중...";
+            btnSubmitCF.Enabled = false;
+
+            try
+            {
+                // 3. WebView2를 제출 페이지로 이동
+                webViewCF.CoreWebView2.Navigate(submitUrl);
+
+                // 4. 페이지 로딩이 완료될 때까지 대기 (TaskCompletionSource 활용)
+                var tcs = new TaskCompletionSource<bool>();
+                EventHandler<CoreWebView2NavigationCompletedEventArgs> navHandler = null;
+                navHandler = (s, args) =>
+                {
+                    webViewCF.CoreWebView2.NavigationCompleted -= navHandler;
+                    tcs.SetResult(args.IsSuccess);
+                };
+                webViewCF.CoreWebView2.NavigationCompleted += navHandler;
+
+                bool isNavigated = await tcs.Task;
+
+                if (!isNavigated)
+                {
+                    MessageBox.Show("제출 페이지 로딩에 실패했습니다. 인터넷을 확인하세요.");
+                    return;
+                }
+
+                btnSubmitCF.Text = "코드 붙여넣는 중...";
+
+                // 5. 자바스크립트 인젝션을 위해 C#의 코드를 이스케이프 처리
+                string safeCode = txtCode.Text.Replace("\\", "\\\\").Replace("`", "\\`").Replace("$", "\\$");
+
+                // 6. 🔥 마법의 자바스크립트 주입 (코드 입력 -> 언어 선택 -> 제출 버튼 클릭)
+                string script = $@"
+            // 1. 언어 드롭다운 선택
+            var langSelect = document.querySelector('select[name=""programTypeId""]');
+            if(langSelect) {{ langSelect.value = '{cfLangId}'; }}
+
+            // 2. 코드 붙여넣기 (Codeforces는 Ace Editor라는 걸 씁니다)
+            // Ace Editor가 활성화되어 있으면 textarea가 숨겨지므로 우회 처리
+            var editorEnv = window.ace ? window.ace.edit('editor') : null;
+            if (editorEnv) {{
+                editorEnv.setValue(`{safeCode}`);
+            }} else {{
+                // Fallback: 일반 textarea일 경우
+                var textarea = document.getElementById('sourceCodeTextarea');
+                if(textarea) {{ textarea.value = `{safeCode}`; }}
+            }}
+
+            // 3. 제출 버튼 클릭
+            var submitBtn = document.querySelector('.submit');
+            if(submitBtn) {{ submitBtn.click(); }}
+            else {{ alert('제출 버튼을 찾을 수 없습니다.'); }}
+        ";
+
+                await webViewCF.CoreWebView2.ExecuteScriptAsync(script);
+
+                MessageBox.Show("🚀 성공적으로 제출 명령을 내렸습니다!\n(WebView 화면에서 제출 내역을 확인하세요)", "자동 제출 완료");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"제출 중 오류 발생: {ex.Message}");
+            }
+            finally
+            {
+                btnSubmitCF.Text = "CF 제출";
+                btnSubmitCF.Enabled = true;
+            }
         }
         #endregion
 
