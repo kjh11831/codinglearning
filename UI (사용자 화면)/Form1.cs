@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
+using static System.Windows.Forms.LinkLabel;
 
 namespace codinglearning
 {
@@ -51,29 +52,56 @@ namespace codinglearning
             geminiService = new GeminiService();
         }
 
-        private void CoreWebView2_NavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
+        // 🌟 void 앞에 async를 반드시 붙여주세요!
+        private async void CoreWebView2_NavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
         {
-            string currentUrl = webViewCF.Source.ToString();
-
-            // A. 로그인 페이지로 리다이렉트 된 경우 (로그인 필요)
-            if (currentUrl.Contains("codeforces.com/enter"))
+            try
             {
-                if (!webViewCF.Visible)
+                // 방어 코드: 브라우저가 아직 로딩 중이거나 닫힌 상태면 무시
+                if (webViewCF == null || webViewCF.CoreWebView2 == null || webViewCF.Source == null) return;
+
+                string currentUrl = webViewCF.Source.ToString();
+
+                // 🌟 핵심 방어막: 브라우저가 내부 이벤트를 안전하게 마무리할 수 있도록 0.5초(500ms) 양보합니다!
+                await Task.Delay(500);
+
+                // 1. 로그인이 안 되어 있어서 로그인 페이지(/enter)로 튕긴 경우
+                if (currentUrl.Contains("codeforces.com/enter"))
                 {
-                    webViewCF.Visible = true;
-                    webViewCF.BringToFront();
-                    // 사용자에게 알림을 줍니다.
-                    MessageBox.Show("코드포스 자동 제출을 위해 로그인이 필요합니다.\n창에서 로그인을 완료해 주세요.", "로그인 안내");
+                    if (webViewCF.Parent == this)
+                    {
+                        Form loginForm = new Form();
+                        loginForm.Text = "코드포스 계정 로그인 (최초 1회)";
+                        loginForm.Size = new Size(800, 700);
+                        loginForm.StartPosition = FormStartPosition.CenterParent;
+
+                        webViewCF.Visible = true;
+                        loginForm.Controls.Add(webViewCF);
+
+                        loginForm.FormClosing += (s, ev) =>
+                        {
+                            loginForm.Controls.Remove(webViewCF);
+                            this.Controls.Add(webViewCF);
+                            webViewCF.Visible = false;
+                        };
+
+                        MessageBox.Show("자동 제출을 위해 로그인이 필요합니다.\n팝업창이 열리면 로그인을 완료해 주세요!", "로그인 안내");
+                        loginForm.ShowDialog(this);
+                    }
+                }
+                // 2. 로그인을 성공해서 설정 페이지나 메인 화면으로 진입한 경우
+                else if (currentUrl.Contains("codeforces.com/settings") || currentUrl.Contains("codeforces.com/profile") || currentUrl == "https://codeforces.com/")
+                {
+                    if (webViewCF.Parent is Form parentForm && parentForm != this)
+                    {
+                        parentForm.Close();
+                        MessageBox.Show("✅ 로그인 성공!\n이제 창을 띄우지 않고 백그라운드에서 자동 제출이 가능합니다.", "알림");
+                    }
                 }
             }
-            // B. 로그인에 성공하여 설정 페이지나 메인 페이지로 들어간 경우
-            else if (currentUrl.Contains("codeforces.com/settings") || currentUrl.Contains("codeforces.com/profile"))
+            catch
             {
-                if (webViewCF.Visible)
-                {
-                    webViewCF.Visible = false; // 로그인 성공했으니 다시 숨깁니다.
-                    MessageBox.Show("로그인 성공! 이제 자동으로 CF 제출이 가능합니다.", "알림");
-                }
+                // 에러 무시
             }
         }
 
@@ -392,7 +420,6 @@ namespace codinglearning
                 MessageBox.Show("문제를 먼저 선택해주세요.");
                 return;
             }
-
             if (string.IsNullOrWhiteSpace(txtCode.Text))
             {
                 MessageBox.Show("제출할 코드가 없습니다!");
@@ -400,74 +427,169 @@ namespace codinglearning
             }
 
             string currentLang = cbLanguage.SelectedItem.ToString();
-            // 1. 코드포스의 언어 ID 매핑 (현재 최신 기준 - 바뀔 수 있으니 CF 사이트의 언어 드롭다운 value값 참고 필요)
-            string cfLangId = "51"; // 기본값
-            if (currentLang == "C#") cfLangId = "65"; // C# Mono 또는 79 (.NET)
-            else if (currentLang == "C++") cfLangId = "54"; // GNU C++17
-            else if (currentLang == "Python") cfLangId = "71"; // Python 3
-            else if (currentLang == "Java") cfLangId = "60"; // Java 11
+            string cfLangId = "51";
+            if (currentLang == "C#") cfLangId = "65";
+            else if (currentLang == "C++") cfLangId = "54";
+            else if (currentLang == "Python") cfLangId = "71";
+            else if (currentLang == "Java") cfLangId = "60";
 
-            // 2. 제출 페이지 URL 조립
             string contestId = new String(selId.Where(Char.IsDigit).ToArray());
+            string index = new String(selId.Where(Char.IsLetter).ToArray());
+
             string submitUrl = $"https://codeforces.com/contest/{contestId}/submit";
 
-            btnSubmitCF.Text = "제출 준비 중...";
+            btnSubmitCF.Text = "제출 창 여는 중...";
             btnSubmitCF.Enabled = false;
 
             try
             {
-                // 3. WebView2를 제출 페이지로 이동
-                webViewCF.CoreWebView2.Navigate(submitUrl);
+                Form resultForm = new Form();
+                resultForm.Text = "제출 내역 확인 (Codeforces)";
+                resultForm.Size = new Size(1000, 700);
+                resultForm.StartPosition = FormStartPosition.CenterParent;
 
-                // 4. 페이지 로딩이 완료될 때까지 대기 (TaskCompletionSource 활용)
-                var tcs = new TaskCompletionSource<bool>();
-                EventHandler<CoreWebView2NavigationCompletedEventArgs> navHandler = null;
-                navHandler = (s, args) =>
+                webViewCF.Visible = true;
+                resultForm.Controls.Add(webViewCF);
+
+                EventHandler<CoreWebView2NavigationCompletedEventArgs> autoFillHandler = null;
+                autoFillHandler = async (s, args) =>
                 {
-                    webViewCF.CoreWebView2.NavigationCompleted -= navHandler;
-                    tcs.SetResult(args.IsSuccess);
+                    // 🌟 1. 스크립트가 중복 실행되지 않도록 한 번 실행되면 즉시 연결 해제!
+                    webViewCF.CoreWebView2.NavigationCompleted -= autoFillHandler;
+
+                    // 에디터와 클라우드플레어가 넉넉히 로딩되도록 1.5초 대기
+                    await Task.Delay(1500);
+
+                    if (!resultForm.Visible) return;
+
+                    string safeCode = txtCode.Text.Replace("\\", "\\\\").Replace("`", "\\`").Replace("$", "\\$");
+
+                    // 🌟 2. 값이 바뀔 때마다 'change' 이벤트를 날려서 코드포스 보안망을 속이는 스크립트
+                    string script = $@"
+                (function() {{
+                    function triggerChange(el) {{
+                        if(el) {{
+                            el.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                        }}
+                    }}
+
+                    var probSelect = document.querySelector('select[name=""submittedProblemIndex""]');
+                    if(probSelect) {{ 
+                        probSelect.value = '{index}'; 
+                        triggerChange(probSelect); // 마우스로 선택한 척 신호 보내기
+                    }}
+
+                    var langSelect = document.querySelector('select[name=""programTypeId""]');
+                    if(langSelect) {{ 
+                        langSelect.value = '{cfLangId}'; 
+                        triggerChange(langSelect); // 마우스로 선택한 척 신호 보내기
+                    }}
+
+                    var safeCode = `{safeCode}`;
+                    var editorEnv = window.ace ? window.ace.edit('editor') : null;
+                    if (editorEnv) {{
+                        editorEnv.setValue(safeCode, 1); // 1 = 커서를 끝으로 이동 (전체선택 방지)
+                    }} else {{
+                        var textarea = document.getElementById('sourceCodeTextarea');
+                        if(textarea) {{ 
+                            textarea.value = safeCode; 
+                            textarea.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                        }}
+                    }}
+                }})();
+            ";
+                    await webViewCF.CoreWebView2.ExecuteScriptAsync(script);
                 };
-                webViewCF.CoreWebView2.NavigationCompleted += navHandler;
 
-                bool isNavigated = await tcs.Task;
+                webViewCF.CoreWebView2.NavigationCompleted += autoFillHandler;
 
-                if (!isNavigated)
+                resultForm.FormClosing += (s, ev) =>
                 {
-                    MessageBox.Show("제출 페이지 로딩에 실패했습니다. 인터넷을 확인하세요.");
-                    return;
+                    // 창을 너무 빨리 닫았을 때를 대비한 2차 안전 해제
+                    webViewCF.CoreWebView2.NavigationCompleted -= autoFillHandler;
+                    resultForm.Controls.Remove(webViewCF);
+                    this.Controls.Add(webViewCF);
+                    webViewCF.Visible = false;
+                };
+
+                resultForm.Shown += (s, ev) =>
+                {
+                    webViewCF.CoreWebView2.Navigate(submitUrl);
+                };
+
+                resultForm.ShowDialog(this);
+
+                btnSubmitCF.Text = "채점 결과 확인 중...";
+
+                try
+                {
+                    string handleScript = @"
+                (function() {
+                    let link = document.querySelector('a[href^=""/profile/""]');
+                    return link ? link.innerText.trim() : '';
+                })();
+            ";
+                    string cfHandle = (await webViewCF.CoreWebView2.ExecuteScriptAsync(handleScript)).Trim('"');
+
+                    if (!string.IsNullOrEmpty(cfHandle))
+                    {
+                        using (var client = new System.Net.Http.HttpClient())
+                        {
+                            string apiUrl = $"https://codeforces.com/api/user.status?handle={cfHandle}&from=1&count=1";
+                            string verdict = "TESTING";
+
+                            while (verdict == "TESTING" || verdict == "")
+                            {
+                                await Task.Delay(2000);
+                                string json = await client.GetStringAsync(apiUrl);
+                                Newtonsoft.Json.Linq.JObject data = Newtonsoft.Json.Linq.JObject.Parse(json);
+
+                                if (data["status"]?.ToString() == "OK")
+                                {
+                                    var latestResult = data["result"][0];
+
+                                    string pContestId = latestResult["problem"]["contestId"]?.ToString();
+                                    string pIndex = latestResult["problem"]["index"]?.ToString();
+
+                                    if ($"{pContestId}{pIndex}" != selId)
+                                    {
+                                        MessageBox.Show("새로 제출된 코드가 없습니다. 저장을 취소합니다.");
+                                        break;
+                                    }
+
+                                    verdict = latestResult["verdict"]?.ToString() ?? "";
+                                }
+                            }
+
+                            if (verdict != "TESTING" && verdict != "")
+                            {
+                                string finalStatus = (verdict == "OK") ? "correct" : "wrong";
+
+                                var record = new codinglearning.Models.SubmissionRecord
+                                {
+                                    code = txtCode.Text,
+                                    status = finalStatus,
+                                    language = currentLang,
+                                    date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                                    title = selTitle
+                                };
+
+                                await firebaseManager.SaveSubmissionAsync(selId, record, selDiff, selTags);
+
+                                string resultMsg = (finalStatus == "correct") ? "✅ 정답 (Accepted)" : $"❌ 오답 ({verdict})";
+                                MessageBox.Show($"채점 확인 완료: {resultMsg}\n통계와 오답 노트에 자동 저장되었습니다! 📊", "자동 기록 완료");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("로그인된 계정 정보를 찾을 수 없어 결과를 저장하지 못했습니다.");
+                    }
                 }
-
-                btnSubmitCF.Text = "코드 붙여넣는 중...";
-
-                // 5. 자바스크립트 인젝션을 위해 C#의 코드를 이스케이프 처리
-                string safeCode = txtCode.Text.Replace("\\", "\\\\").Replace("`", "\\`").Replace("$", "\\$");
-
-                // 6. 🔥 마법의 자바스크립트 주입 (코드 입력 -> 언어 선택 -> 제출 버튼 클릭)
-                string script = $@"
-            // 1. 언어 드롭다운 선택
-            var langSelect = document.querySelector('select[name=""programTypeId""]');
-            if(langSelect) {{ langSelect.value = '{cfLangId}'; }}
-
-            // 2. 코드 붙여넣기 (Codeforces는 Ace Editor라는 걸 씁니다)
-            // Ace Editor가 활성화되어 있으면 textarea가 숨겨지므로 우회 처리
-            var editorEnv = window.ace ? window.ace.edit('editor') : null;
-            if (editorEnv) {{
-                editorEnv.setValue(`{safeCode}`);
-            }} else {{
-                // Fallback: 일반 textarea일 경우
-                var textarea = document.getElementById('sourceCodeTextarea');
-                if(textarea) {{ textarea.value = `{safeCode}`; }}
-            }}
-
-            // 3. 제출 버튼 클릭
-            var submitBtn = document.querySelector('.submit');
-            if(submitBtn) {{ submitBtn.click(); }}
-            else {{ alert('제출 버튼을 찾을 수 없습니다.'); }}
-        ";
-
-                await webViewCF.CoreWebView2.ExecuteScriptAsync(script);
-
-                MessageBox.Show("🚀 성공적으로 제출 명령을 내렸습니다!\n(WebView 화면에서 제출 내역을 확인하세요)", "자동 제출 완료");
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"결과를 가져오는 중 오류 발생: {ex.Message}");
+                }
             }
             catch (Exception ex)
             {
