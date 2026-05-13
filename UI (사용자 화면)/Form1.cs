@@ -339,9 +339,44 @@ namespace codinglearning
                 string index = new String(selId.Where(Char.IsLetter).ToArray());
                 string url = $"https://codeforces.com/problemset/problem/{contestId}/{index}";
 
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+                // 🌟 1. 문제를 보여줄 전용 팝업창 생성
+                Form probForm = new Form();
+                probForm.Text = $"[문제 보기] {selId} - {selTitle}";
+                probForm.Size = new Size(1000, 800);
+                probForm.StartPosition = FormStartPosition.CenterScreen;
+
+                // 🌟 2. 새로운 웹 뷰를 만들어서 넣거나, 기존 webViewCF를 복사해서 활용
+                // 여기서는 가장 확실한 방법인 전용 웹 뷰를 즉석에서 생성합니다.
+                var webView = new Microsoft.Web.WebView2.WinForms.WebView2();
+                webView.Dock = DockStyle.Fill;
+                probForm.Controls.Add(webView);
+
+                // 창이 닫힐 때 메모리 해제
+                probForm.FormClosed += (s, ev) => { webView.Dispose(); };
+
+                probForm.Show(); // 🌟 핵심: ShowDialog가 아닌 Show를 써야 메인 창 코딩이 가능합니다!
+
+                // 웹 뷰 초기화 및 이동
+                InitializeAndNavigate(webView, url);
             }
-            else MessageBox.Show("목록에서 문제를 먼저 선택해주세요.");
+            else
+            {
+                MessageBox.Show("목록에서 문제를 먼저 선택해주세요.");
+            }
+        }
+
+        // 웹 뷰 초기화 및 다크 모드 적용을 위한 헬퍼 메서드
+        private async void InitializeAndNavigate(Microsoft.Web.WebView2.WinForms.WebView2 wv, string url)
+        {
+            await wv.EnsureCoreWebView2Async(null);
+
+            // 페이지 로딩 완료 시 다크 모드 적용 (기존 로직 활용)
+            wv.CoreWebView2.NavigationCompleted += (s, e) => {
+                string darkModeCss = isDarkMode ? "document.documentElement.style.filter = 'invert(85%) hue-rotate(180deg)';" : "";
+                wv.CoreWebView2.ExecuteScriptAsync(darkModeCss);
+            };
+
+            wv.CoreWebView2.Navigate(url);
         }
         #endregion
 
@@ -584,6 +619,9 @@ namespace codinglearning
                                 string langKey = currentLang.Replace("#", "Sharp").Replace("+", "p");
                                 await firebaseManager.SaveSubmissionAsync($"{selId}_{langKey}", record, selDiff, selTags);
 
+                                bool isCorrect = (finalStatus == "correct"); // 정답 여부 판별
+                                fileManager.SaveCodeToLocalFile(selId, selTitle, txtCode.Text, currentLang, isCorrect);
+
                                 string resultMsg = (finalStatus == "correct") ? "✅ 정답 (Accepted)" : $"❌ 오답 ({verdict})";
                                 MessageBox.Show($"채점 확인 완료: {resultMsg}\n통계와 오답 노트에 자동 저장되었습니다! 📊", "자동 기록 완료");
                             }
@@ -763,19 +801,48 @@ namespace codinglearning
 
         private void ClearWrongDetailLabels() { lblWrongProbNum.Text = "-"; lblWrongProbTitle.Text = "-"; lblWrongProbDiff.Text = "-"; lblWrongProbTags.Text = "-"; lblWrongProbResult.Text = "-"; }
 
-        private void btnViewWrongProblem_Click(object sender, EventArgs e)
+        private async void btnViewWrongProblem_Click(object sender, EventArgs e)
         {
             sessionManager.RecordUserAction();
             string wrongId = lblWrongProbNum.Text;
-            if (wrongId != "나야 번호" && !string.IsNullOrEmpty(wrongId))
+
+            // 선택된 문제가 없거나 기본값("-")일 경우 예외 처리
+            if (wrongId != "나야 번호" && !string.IsNullOrEmpty(wrongId) && wrongId != "-")
             {
                 string contestId = new String(wrongId.Where(Char.IsDigit).ToArray());
                 string index = new String(wrongId.Where(Char.IsLetter).ToArray());
                 string url = $"https://codeforces.com/problemset/problem/{contestId}/{index}";
 
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+                // 🌟 1. 문제를 보여줄 전용 팝업창 생성
+                Form probForm = new Form();
+                probForm.Text = $"[문제 보기] {wrongId} - {lblWrongProbTitle.Text}";
+                probForm.Size = new Size(1000, 800);
+                probForm.StartPosition = FormStartPosition.CenterScreen;
+
+                // 🌟 2. 팝업창 안에 들어갈 웹 뷰 생성
+                var webView = new Microsoft.Web.WebView2.WinForms.WebView2();
+                webView.Dock = DockStyle.Fill;
+                probForm.Controls.Add(webView);
+
+                // 창이 닫힐 때 브라우저 메모리 깔끔하게 정리
+                probForm.FormClosed += (s, ev) => { webView.Dispose(); };
+
+                probForm.Show(); // 메인 창을 막지 않도록 Show() 사용
+
+                // 🌟 3. 웹 뷰 초기화 및 다크 모드 자동 적용 후 페이지 이동
+                await webView.EnsureCoreWebView2Async(null);
+
+                webView.CoreWebView2.NavigationCompleted += (s, args) => {
+                    string darkModeCss = isDarkMode ? "document.documentElement.style.filter = 'invert(85%) hue-rotate(180deg)';" : "";
+                    webView.CoreWebView2.ExecuteScriptAsync(darkModeCss);
+                };
+
+                webView.CoreWebView2.Navigate(url);
             }
-            else MessageBox.Show("오답 목록에서 문제를 선택해주세요.");
+            else
+            {
+                MessageBox.Show("오답 목록에서 문제를 먼저 선택해주세요.");
+            }
         }
 
         private void btnSolveAgain_Click(object sender, EventArgs e)
@@ -1051,7 +1118,7 @@ namespace codinglearning
 
                     if (c is TextBox tb)
                     {
-                        tb.BorderStyle = BorderStyle.FixedSingle;
+                        tb.BorderStyle = isDarkMode ? BorderStyle.FixedSingle : BorderStyle.Fixed3D;
                     }
                 }
                 else if (c is DataGridView dgv)
