@@ -17,6 +17,8 @@ namespace codinglearning.Models
         public string language { get; set; }
         public string date { get; set; }
         public string title { get; set; }
+        public string diff { get; set; }
+        public string tags { get; set; }
     }
 
     public class WrongProblemData
