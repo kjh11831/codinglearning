@@ -187,5 +187,54 @@ namespace codinglearning.Services
             }
             return null;
         }
+
+        // 단순 코드 실행 전용 메서드
+        public async Task<string> RunCodeOnlyAsync(string code, string language)
+        {
+            try
+            {
+                int langId = 51; // Judge0 기준 C# ID
+                if (language == "C++") langId = 54;
+                else if (language == "Python") langId = 71;
+                else if (language == "Java") langId = 62;
+
+                string base64Code = Convert.ToBase64String(Encoding.UTF8.GetBytes(code));
+
+                // 입력값(stdin)이나 정답(expected_output) 없이 순수 코드만 전송
+                var requestData = new { source_code = base64Code, language_id = langId };
+
+                string jsonContent = Newtonsoft.Json.JsonConvert.SerializeObject(requestData);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+                string url = "https://ce.judge0.com/submissions/?base64_encoded=true&wait=true";
+                HttpResponseMessage response = await httpClient.PostAsync(url, content);
+
+                string responseBody = await response.Content.ReadAsStringAsync();
+                JObject result = JObject.Parse(responseBody);
+
+                if (result["status"] == null) return "❌ API 응답 오류";
+
+                string GetDecodedString(JToken token)
+                {
+                    string str = token?.ToString();
+                    if (string.IsNullOrEmpty(str)) return "";
+                    try { return Encoding.UTF8.GetString(Convert.FromBase64String(str)); }
+                    catch { return str; }
+                }
+
+                string stdout = GetDecodedString(result["stdout"]);
+                string stderr = GetDecodedString(result["stderr"]);
+                string compileOutput = GetDecodedString(result["compile_output"]);
+
+                if (!string.IsNullOrEmpty(compileOutput)) return $"[컴파일 에러]\r\n{compileOutput.Trim()}";
+                if (!string.IsNullOrEmpty(stderr)) return $"[런타임 에러]\r\n{stderr.Trim()}";
+                if (string.IsNullOrEmpty(stdout)) return "[출력 없음 (정상 종료)]";
+
+                return stdout.Trim();
+            }
+            catch (Exception ex)
+            {
+                return $"실행 중 오류 발생: {ex.Message}";
+            }
+        }
     }
 }

@@ -346,17 +346,57 @@ namespace codinglearning
         private async void btnRunSample_Click(object sender, EventArgs e)
         {
             if (isRunningSample) return;
-            if (string.IsNullOrEmpty(selId)) { MessageBox.Show("문제를 먼저 선택해주세요!"); return; }
+
+            // 코드가 비어있는지 1차 방어
+            if (string.IsNullOrWhiteSpace(txtCode.Text))
+            {
+                MessageBox.Show("실행할 코드를 먼저 작성해주세요!");
+                return;
+            }
 
             isRunningSample = true;
+
             try
             {
                 string currentLang = cbLanguage.SelectedItem.ToString();
+                bool runOnly = false;
+
+                // 🌟 1. 문제가 이미 선택되어 있는 경우 사용자에게 어떻게 실행할지 물어봅니다!
+                if (!string.IsNullOrEmpty(selId))
+                {
+                    DialogResult dialogResult = MessageBox.Show(
+                        $"현재 [{selId} - {selTitle}] 문제가 선택되어 있습니다.\n\n" +
+                        "▶ [예] : 공식 예제 테스트 채점 진행\n" +
+                        "▶ [아니요] : 코드만 단순 실행하여 출력값 확인",
+                        "실행 모드 선택", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+
+                    if (dialogResult == DialogResult.Cancel) return;
+                    if (dialogResult == DialogResult.No) runOnly = true;
+                }
+                else
+                {
+                    // 선택된 문제가 아예 없으면 묻지도 따지지도 않고 단순 실행
+                    runOnly = true;
+                }
+
+                // 🌟 2. 단순 실행 모드 (순수 출력 결과만 확인)
+                if (runOnly)
+                {
+                    btnRunSample.Text = "코드 실행 중...";
+                    txtResult.Text = "⏳ 코드를 컴파일하고 실행하는 중입니다...\r\n\r\n";
+
+                    string rawOutput = await apiService.RunCodeOnlyAsync(txtCode.Text, currentLang);
+
+                    txtResult.AppendText("==================== [실행 결과] ====================\r\n");
+                    txtResult.AppendText(rawOutput);
+                    txtResult.AppendText("\r\n=====================================================");
+                    return;
+                }
+
+                // 🌟 3. 기존의 예제 테스트 모드 (문제가 선택되어 있고 '예'를 누른 경우)
                 btnRunSample.Text = "예제 가져오는 중...";
 
-                // 🌟 List 형태로 여러 개의 예제를 받아옵니다.
                 var (sampleInputs, sampleOutputs, errorMsg) = await apiService.FetchSampleDataFromWebAsync(selId);
-
                 if (!string.IsNullOrEmpty(errorMsg) || sampleInputs == null)
                 {
                     txtResult.Text = $"❌ 예제 가져오기 실패\n원인: {errorMsg}\n\n(공식 사이트의 예제 복사 버튼을 이용하시거나 나중에 다시 시도해주세요.)";
@@ -369,17 +409,14 @@ namespace codinglearning
                 bool allCorrect = true;
                 string finalMessage = "";
 
-                // 🌟 받아온 모든 예제에 대해 반복문을 돌며 순차적으로 채점합니다.
                 for (int i = 0; i < sampleInputs.Count; i++)
                 {
                     txtResult.AppendText($"⏳ [Test Case {i + 1}] 채점 중...\r\n");
-
                     var (isCorrect, message) = await apiService.RunJudge0Async(txtCode.Text, currentLang, sampleInputs[i], sampleOutputs[i]);
 
                     if (!isCorrect)
                     {
                         allCorrect = false;
-                        // 틀린 케이스가 나오면 즉시 중단하고 해당 케이스의 에러 메시지를 보여줌
                         finalMessage = $"\r\n❌ [Test Case {i + 1}] 실패\n\n{message}";
                         break;
                     }
@@ -389,15 +426,12 @@ namespace codinglearning
                     }
                 }
 
-                // 반복문이 끝난 후, 모든 테스트를 통과했다면
                 if (allCorrect)
                 {
                     finalMessage = $"\r\n🎉 완벽합니다! 모든 예제({sampleInputs.Count}개)를 성공적으로 통과했습니다.\n이제 공식 사이트에 제출해 보세요!";
                 }
 
                 txtResult.AppendText(finalMessage);
-
-                // 파일 저장은 모든 예제를 통과했는지 여부(allCorrect)를 기준으로 진행
                 fileManager.SaveCodeToLocalFile(selId, selTitle, txtCode.Text, currentLang, allCorrect);
             }
             catch (Exception ex)
@@ -413,6 +447,9 @@ namespace codinglearning
 
         private async void btnSubmitCF_Click(object sender, EventArgs e)
         {
+            // 🌟 1. 버튼이 이미 일하고 있다면 마우스 클릭을 무시함 (Enabled = false 역할)
+            if (btnSubmitCF.Text != "CF 제출") return;
+
             sessionManager.RecordUserAction();
 
             if (string.IsNullOrEmpty(selId))
@@ -439,7 +476,6 @@ namespace codinglearning
             string submitUrl = $"https://codeforces.com/contest/{contestId}/submit";
 
             btnSubmitCF.Text = "제출 창 여는 중...";
-            btnSubmitCF.Enabled = false;
 
             try
             {
@@ -464,31 +500,37 @@ namespace codinglearning
 
                     string safeCode = txtCode.Text.Replace("\\", "\\\\").Replace("`", "\\`").Replace("$", "\\$");
 
-                    // 🌟 2. 값이 바뀔 때마다 'change' 이벤트를 날려서 코드포스 보안망을 속이는 스크립트
+                    // 🌟 다크 모드일 경우 웹페이지 색상을 반전시키는 CSS 필터 마법
+                    string darkModeCss = isDarkMode ? "document.documentElement.style.filter = 'invert(85%) hue-rotate(180deg)';" : "";
+
                     string script = $@"
-                (function() {{
-                    function triggerChange(el) {{
-                        if(el) {{
-                            el.dispatchEvent(new Event('change', {{ bubbles: true }}));
-                        }}
-                    }}
+            (function() {{
+                {darkModeCss} // 화면 진입 즉시 다크 모드 필터 적용
 
-                    var probSelect = document.querySelector('select[name=""submittedProblemIndex""]');
-                    if(probSelect) {{ 
-                        probSelect.value = '{index}'; 
-                        triggerChange(probSelect); // 마우스로 선택한 척 신호 보내기
+                function triggerChange(el) {{
+                    if(el) {{
+                        el.dispatchEvent(new Event('change', {{ bubbles: true }}));
                     }}
+                }}
 
-                    var langSelect = document.querySelector('select[name=""programTypeId""]');
-                    if(langSelect) {{ 
-                        langSelect.value = '{cfLangId}'; 
-                        triggerChange(langSelect); // 마우스로 선택한 척 신호 보내기
-                    }}
+                var probSelect = document.querySelector('select[name=""submittedProblemIndex""]');
+                if(probSelect) {{ 
+                    probSelect.value = '{index}'; 
+                    triggerChange(probSelect); 
+                }}
 
+                var langSelect = document.querySelector('select[name=""programTypeId""]');
+                if(langSelect) {{ 
+                    langSelect.value = '{cfLangId}'; 
+                    triggerChange(langSelect); 
+                }}
+
+                // 🌟 핵심 수정: 언어 변경 후 에디터가 갱신되는 시간을 0.5초(500ms) 기다려준 뒤 코드 입력!
+                setTimeout(function() {{
                     var safeCode = `{safeCode}`;
                     var editorEnv = window.ace ? window.ace.edit('editor') : null;
                     if (editorEnv) {{
-                        editorEnv.setValue(safeCode, 1); // 1 = 커서를 끝으로 이동 (전체선택 방지)
+                        editorEnv.setValue(safeCode, 1);
                     }} else {{
                         var textarea = document.getElementById('sourceCodeTextarea');
                         if(textarea) {{ 
@@ -496,8 +538,10 @@ namespace codinglearning
                             textarea.dispatchEvent(new Event('input', {{ bubbles: true }}));
                         }}
                     }}
-                }})();
-            ";
+                }}, 500);
+            }})();
+        ";
+
                     await webViewCF.CoreWebView2.ExecuteScriptAsync(script);
                 };
 
@@ -536,32 +580,47 @@ namespace codinglearning
                         using (var client = new System.Net.Http.HttpClient())
                         {
                             string apiUrl = $"https://codeforces.com/api/user.status?handle={cfHandle}&from=1&count=1";
-                            string verdict = "TESTING";
 
-                            while (verdict == "TESTING" || verdict == "")
+                            string verdict = "TESTING";
+                            bool foundSubmission = false;
+                            int retryCount = 0;
+
+                            // 🌟 핵심 수정: API 반영 지연을 고려하여 최대 30초(15회)까지 끈질기게 기다립니다.
+                            while (retryCount < 15)
                             {
                                 await Task.Delay(2000);
+                                retryCount++;
+
                                 string json = await client.GetStringAsync(apiUrl);
                                 Newtonsoft.Json.Linq.JObject data = Newtonsoft.Json.Linq.JObject.Parse(json);
 
-                                if (data["status"]?.ToString() == "OK")
+                                if (data["status"]?.ToString() == "OK" && data["result"] != null && data["result"].Any())
                                 {
                                     var latestResult = data["result"][0];
-
                                     string pContestId = latestResult["problem"]["contestId"]?.ToString();
                                     string pIndex = latestResult["problem"]["index"]?.ToString();
 
-                                    if ($"{pContestId}{pIndex}" != selId)
+                                    // API의 가장 최근 기록이 '방금 제출한 문제'와 일치하는지 확인
+                                    if ($"{pContestId}{pIndex}" == selId)
                                     {
-                                        MessageBox.Show("새로 제출된 코드가 없습니다. 저장을 취소합니다.");
-                                        break;
-                                    }
+                                        foundSubmission = true;
+                                        verdict = latestResult["verdict"]?.ToString() ?? "";
 
-                                    verdict = latestResult["verdict"]?.ToString() ?? "";
+                                        // 채점이 완료되었으면(TESTING이 아니면) 기다림 종료!
+                                        if (verdict != "TESTING" && verdict != "")
+                                        {
+                                            break;
+                                        }
+                                    }
+                                    // 일치하지 않는다면 아직 API에 안 올라온 것이므로 다음 턴(2초 뒤)에 다시 확인 (continue)
                                 }
                             }
 
-                            if (verdict != "TESTING" && verdict != "")
+                            if (!foundSubmission)
+                            {
+                                MessageBox.Show("API 서버 지연으로 제출 내역을 찾지 못했거나 제출이 누락되었습니다.", "저장 취소");
+                            }
+                            else if (verdict != "TESTING" && verdict != "")
                             {
                                 string finalStatus = (verdict == "OK") ? "correct" : "wrong";
 
@@ -598,7 +657,6 @@ namespace codinglearning
             finally
             {
                 btnSubmitCF.Text = "CF 제출";
-                btnSubmitCF.Enabled = true;
             }
         }
         #endregion
@@ -614,214 +672,229 @@ namespace codinglearning
 
         private async Task LoadWrongListUI()
         {
-            var wrongDict = await firebaseManager.GetWrongListAsync();
-            var allDict = await firebaseManager.GetAllSubmissionsAsync();
-
-            dgvWrongList.Rows.Clear();
-            dgvWrongList.ColumnCount = 8;
-            dgvWrongList.Columns[0].HeaderText = "번호"; dgvWrongList.Columns[1].HeaderText = "제목";
-            dgvWrongList.Columns[2].HeaderText = "언어"; dgvWrongList.Columns[3].HeaderText = "난이도";
-            dgvWrongList.Columns[4].HeaderText = "태그"; dgvWrongList.Columns[5].HeaderText = "결과";
-            dgvWrongList.Columns[6].HeaderText = "발생일(풀이일)"; dgvWrongList.Columns[7].HeaderText = "복습 예정일";
-
-            HashSet<string> processedKeys = new HashSet<string>();
-            Dictionary<string, (string title, string diff, string tags)> infoCache = new Dictionary<string, (string, string, string)>();
-
-            void UpdateCache(string num, string t, string d, string tg)
+            try
             {
-                if (!infoCache.ContainsKey(num)) infoCache[num] = (t, d, tg);
-                else
+                ClearWrongDetailLabels();
+
+                var wrongDict = await firebaseManager.GetWrongListAsync();
+                var allDict = await firebaseManager.GetAllSubmissionsAsync();
+
+                // 🌟 지현 님의 디자인에 맞춰 8열로 강제 고정!
+                dgvWrongList.Rows.Clear();
+                dgvWrongList.ColumnCount = 8;
+                dgvWrongList.Columns[0].HeaderText = "번호";
+                dgvWrongList.Columns[1].HeaderText = "제목";
+                dgvWrongList.Columns[2].HeaderText = "언어";
+                dgvWrongList.Columns[3].HeaderText = "난이도";
+                dgvWrongList.Columns[4].HeaderText = "태그";
+                dgvWrongList.Columns[5].HeaderText = "결과";
+                dgvWrongList.Columns[6].HeaderText = "발생일(풀이일)";
+                dgvWrongList.Columns[7].HeaderText = "복습 예정일";
+
+                HashSet<string> processedKeys = new HashSet<string>();
+                Dictionary<string, (string title, string diff, string tags)> infoCache = new Dictionary<string, (string, string, string)>();
+
+                void UpdateCache(string num, string t, string d, string tg)
                 {
-                    var existing = infoCache[num];
-                    string newT = existing.title == "-" && t != "-" ? t : existing.title;
-                    string newD = existing.diff == "-" && d != "-" ? d : existing.diff;
-                    string newTg = existing.tags == "-" && tg != "-" ? tg : existing.tags;
-                    infoCache[num] = (newT, newD, newTg);
-                }
-            }
-
-            Dictionary<string, JObject> normAllDict = new Dictionary<string, JObject>();
-            if (allDict != null)
-            {
-                foreach (var problem in allDict)
-                {
-                    string normKey = problem.Key.Replace("+", "p").Replace("#", "Sharp");
-                    JObject pData = JObject.FromObject(problem.Value);
-                    normAllDict[normKey] = pData;
-
-                    string pNum = normKey.Split('_')[0];
-                    string d = pData["diff"]?.ToString() ?? pData["difficulty"]?.ToString() ?? "-";
-                    string tg = pData["tags"]?.ToString() ?? "-";
-                    string t = "-";
-
-                    JToken attemptsToken = pData["attempts"];
-                    if (attemptsToken != null && attemptsToken.HasValues)
+                    if (!infoCache.ContainsKey(num)) infoCache[num] = (t, d, tg);
+                    else
                     {
-                        var firstAttempt = attemptsToken.First;
-                        if (firstAttempt is JProperty prop)
-                        {
-                            t = prop.Value["title"]?.ToString() ?? "-";
-                            if (d == "-") d = prop.Value["diff"]?.ToString() ?? "-";
-                            if (tg == "-") tg = prop.Value["tags"]?.ToString() ?? "-";
-                        }
-                        else if (firstAttempt != null)
-                        {
-                            t = firstAttempt["title"]?.ToString() ?? "-";
-                            if (d == "-") d = firstAttempt["diff"]?.ToString() ?? "-";
-                            if (tg == "-") tg = firstAttempt["tags"]?.ToString() ?? "-";
-                        }
+                        var existing = infoCache[num];
+                        string newT = existing.title == "-" && t != "-" ? t : existing.title;
+                        string newD = existing.diff == "-" && d != "-" ? d : existing.diff;
+                        string newTg = existing.tags == "-" && tg != "-" ? tg : existing.tags;
+                        infoCache[num] = (newT, newD, newTg);
                     }
-                    UpdateCache(pNum, t, d, tg);
                 }
-            }
 
-            if (wrongDict != null)
-            {
-                foreach (var item in wrongDict)
+                Dictionary<string, Newtonsoft.Json.Linq.JObject> normAllDict = new Dictionary<string, Newtonsoft.Json.Linq.JObject>();
+                if (allDict != null)
                 {
-                    string pNum = item.Key.Split('_')[0];
-                    string t = item.Value["title"]?.ToString() ?? "-";
-                    string d = item.Value["diff"]?.ToString() ?? "-";
-                    string tg = item.Value["tags"]?.ToString() ?? "-";
-                    UpdateCache(pNum, t, d, tg);
-                }
-            }
-
-            if (wrongDict != null)
-            {
-                foreach (var item in wrongDict)
-                {
-                    string rawKey = item.Key;
-                    string normKey = rawKey.Replace("+", "p").Replace("#", "Sharp");
-                    processedKeys.Add(normKey);
-
-                    string pNum = normKey.Split('_')[0];
-                    string safeLang = normKey.Contains("_") ? normKey.Split('_')[1] : "알 수 없음";
-                    string lang = safeLang.Replace("Sharp", "#").Replace("p", "+");
-
-                    string title = item.Value["title"]?.ToString() ?? "-";
-                    string diff = item.Value["diff"]?.ToString() ?? "-";
-                    string tags = item.Value["tags"]?.ToString() ?? "-";
-
-                    if (title == "-" || diff == "-" || tags == "-")
+                    foreach (var problem in allDict)
                     {
-                        if (infoCache.ContainsKey(pNum))
+                        string normKey = problem.Key.Replace("+", "p").Replace("#", "Sharp");
+                        Newtonsoft.Json.Linq.JObject pData = Newtonsoft.Json.Linq.JObject.FromObject(problem.Value);
+                        normAllDict[normKey] = pData;
+
+                        string pNum = normKey.Split('_')[0];
+                        string d = pData["diff"]?.ToString() ?? pData["difficulty"]?.ToString() ?? "-";
+                        string tg = pData["tags"]?.ToString() ?? "-";
+                        string t = "-";
+
+                        Newtonsoft.Json.Linq.JToken attemptsToken = pData["attempts"];
+                        if (attemptsToken != null && attemptsToken.HasValues)
                         {
-                            if (title == "-") title = infoCache[pNum].title;
-                            if (diff == "-") diff = infoCache[pNum].diff;
-                            if (tags == "-") tags = infoCache[pNum].tags;
+                            var firstAttempt = attemptsToken.First;
+                            if (firstAttempt is Newtonsoft.Json.Linq.JProperty prop)
+                            {
+                                t = prop.Value["title"]?.ToString() ?? "-";
+                                if (d == "-") d = prop.Value["diff"]?.ToString() ?? "-";
+                                if (tg == "-") tg = prop.Value["tags"]?.ToString() ?? "-";
+                            }
+                            else if (firstAttempt != null)
+                            {
+                                t = firstAttempt["title"]?.ToString() ?? "-";
+                                if (d == "-") d = firstAttempt["diff"]?.ToString() ?? "-";
+                                if (tg == "-") tg = firstAttempt["tags"]?.ToString() ?? "-";
+                            }
                         }
-                        if (pNum == selId)
-                        {
-                            if (title == "-") title = selTitle;
-                            if (diff == "-") diff = selDiff;
-                            if (tags == "-") tags = selTags;
-                        }
+                        UpdateCache(pNum, t, d, tg);
+                    }
+                }
+
+                if (wrongDict != null)
+                {
+                    foreach (var item in wrongDict)
+                    {
+                        string pNum = item.Key.Split('_')[0];
+                        string t = item.Value["title"]?.ToString() ?? "-";
+                        string d = item.Value["diff"]?.ToString() ?? "-";
+                        string tg = item.Value["tags"]?.ToString() ?? "-";
+                        UpdateCache(pNum, t, d, tg);
                     }
 
-                    bool isSolved = item.Value["solvedAfter"] != null && (bool)item.Value["solvedAfter"];
-                    string date = item.Value["addedDate"]?.ToString() ?? "-";
-                    string reviewDateStr = item.Value["reviewDate"]?.ToString() ?? "-";
-
-                    int tryCount = 1;
-                    if (normAllDict.ContainsKey(normKey))
+                    foreach (var item in wrongDict)
                     {
-                        JObject pData = normAllDict[normKey];
-                        JToken attemptsToken = pData["attempts"];
-                        if (attemptsToken != null)
+                        string rawKey = item.Key;
+                        string normKey = rawKey.Replace("+", "p").Replace("#", "Sharp");
+                        processedKeys.Add(normKey);
+
+                        string pNum = normKey.Split('_')[0];
+                        string safeLang = normKey.Contains("_") ? normKey.Split('_')[1] : "알 수 없음";
+                        string lang = safeLang.Replace("Sharp", "#").Replace("p", "+");
+
+                        string title = item.Value["title"]?.ToString() ?? "-";
+                        string diff = item.Value["diff"]?.ToString() ?? "-";
+                        string tags = item.Value["tags"]?.ToString() ?? "-";
+
+                        if (title == "-" || diff == "-" || tags == "-")
+                        {
+                            if (infoCache.ContainsKey(pNum))
+                            {
+                                if (title == "-") title = infoCache[pNum].title;
+                                if (diff == "-") diff = infoCache[pNum].diff;
+                                if (tags == "-") tags = infoCache[pNum].tags;
+                            }
+                            if (pNum == selId)
+                            {
+                                if (title == "-") title = selTitle;
+                                if (diff == "-") diff = selDiff;
+                                if (tags == "-") tags = selTags;
+                            }
+                        }
+
+                        bool isSolved = item.Value["solvedAfter"] != null && (bool)item.Value["solvedAfter"];
+                        string date = item.Value["addedDate"]?.ToString() ?? "-";
+                        string reviewDateStr = item.Value["reviewDate"]?.ToString() ?? "-";
+
+                        int tryCount = 1;
+                        if (normAllDict.ContainsKey(normKey))
+                        {
+                            Newtonsoft.Json.Linq.JObject pData = normAllDict[normKey];
+                            Newtonsoft.Json.Linq.JToken attemptsToken = pData["attempts"];
+                            if (attemptsToken != null)
+                            {
+                                tryCount = attemptsToken.Children().Count();
+                                foreach (var attempt in attemptsToken)
+                                {
+                                    string status = attempt.First?["status"]?.ToString() ?? attempt["status"]?.ToString();
+                                    if (status == "correct") { isSolved = true; break; }
+                                }
+                            }
+                        }
+
+                        if (rbCorrect != null && rbCorrect.Checked && !isSolved) continue;
+                        if (rbWrong != null && rbWrong.Checked && isSolved) continue;
+
+                        string finalReviewDate = isSolved ? "-" : reviewDateStr;
+                        string resultText = isSolved ? $"✅ 해결됨 ({tryCount}-Try)" : "❌ 미해결";
+
+                        // 🌟 드디어 8개 컬럼 순서대로 데이터 삽입!
+                        int rowIndex = dgvWrongList.Rows.Add(pNum, title, lang, diff, tags, resultText, date, finalReviewDate);
+
+                        if (!isSolved && DateTime.TryParse(finalReviewDate, out DateTime reviewDate) && reviewDate < DateTime.Now)
+                        {
+                            dgvWrongList.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.IndianRed;
+                            dgvWrongList.Rows[rowIndex].DefaultCellStyle.Font = new Font(dgvWrongList.Font, FontStyle.Bold);
+                        }
+                    }
+                }
+
+                if (normAllDict != null)
+                {
+                    foreach (var kvp in normAllDict)
+                    {
+                        string normKey = kvp.Key;
+                        if (processedKeys.Contains(normKey)) continue;
+
+                        Newtonsoft.Json.Linq.JObject pData = kvp.Value;
+                        string pNum = normKey.Split('_')[0];
+                        string safeLang = normKey.Contains("_") ? normKey.Split('_')[1] : "알 수 없음";
+                        string lang = safeLang.Replace("Sharp", "#").Replace("p", "+");
+
+                        string title = "-", date = "-";
+                        string diff = pData["diff"]?.ToString() ?? pData["difficulty"]?.ToString() ?? "-";
+                        string tags = pData["tags"]?.ToString() ?? "-";
+
+                        int tryCount = 1;
+                        bool hasCorrect = false;
+
+                        Newtonsoft.Json.Linq.JToken attemptsToken = pData["attempts"];
+                        if (attemptsToken != null && attemptsToken.HasValues)
                         {
                             tryCount = attemptsToken.Children().Count();
                             foreach (var attempt in attemptsToken)
                             {
                                 string status = attempt.First?["status"]?.ToString() ?? attempt["status"]?.ToString();
-                                if (status == "correct") { isSolved = true; break; }
+                                if (status == "correct") hasCorrect = true;
+                            }
+
+                            var firstAttempt = attemptsToken.First;
+                            if (firstAttempt is Newtonsoft.Json.Linq.JProperty prop)
+                            {
+                                title = prop.Value["title"]?.ToString() ?? "-";
+                                date = prop.Value["date"]?.ToString() ?? "-";
+                                if (diff == "-") diff = prop.Value["diff"]?.ToString() ?? "-";
+                                if (tags == "-") tags = prop.Value["tags"]?.ToString() ?? "-";
+                            }
+                            else if (firstAttempt != null)
+                            {
+                                title = firstAttempt["title"]?.ToString() ?? "-";
+                                date = firstAttempt["date"]?.ToString() ?? "-";
+                                if (diff == "-") diff = firstAttempt["diff"]?.ToString() ?? "-";
+                                if (tags == "-") tags = firstAttempt["tags"]?.ToString() ?? "-";
                             }
                         }
-                    }
 
-                    if (rbCorrect != null && rbCorrect.Checked && !isSolved) continue;
-                    if (rbWrong != null && rbWrong.Checked && isSolved) continue;
+                        if (title == "-" || diff == "-" || tags == "-")
+                        {
+                            if (infoCache.ContainsKey(pNum))
+                            {
+                                if (title == "-") title = infoCache[pNum].title;
+                                if (diff == "-") diff = infoCache[pNum].diff;
+                                if (tags == "-") tags = infoCache[pNum].tags;
+                            }
+                            if (pNum == selId)
+                            {
+                                if (title == "-") title = selTitle;
+                                if (diff == "-") diff = selDiff;
+                                if (tags == "-") tags = selTags;
+                            }
+                        }
 
-                    string finalReviewDate = isSolved ? "-" : reviewDateStr;
-                    string resultText = isSolved ? $"✅ 해결됨 ({tryCount}-Try)" : "❌ 미해결";
+                        if (rbCorrect != null && rbCorrect.Checked && !hasCorrect) continue;
+                        if (rbWrong != null && rbWrong.Checked && hasCorrect) continue;
 
-                    int rowIndex = dgvWrongList.Rows.Add(pNum, title, lang, diff, tags, resultText, date, finalReviewDate);
-                    if (!isSolved && DateTime.TryParse(finalReviewDate, out DateTime reviewDate) && reviewDate < DateTime.Now)
-                    {
-                        dgvWrongList.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.IndianRed;
-                        dgvWrongList.Rows[rowIndex].DefaultCellStyle.Font = new Font(dgvWrongList.Font, FontStyle.Bold);
+                        string resultText = hasCorrect ? $"✅ 해결됨 ({tryCount}-Try)" : "❌ 미해결";
+
+                        // 🌟 여기도 8개 컬럼 순서대로!
+                        dgvWrongList.Rows.Add(pNum, title, lang, diff, tags, resultText, date, "-");
                     }
                 }
             }
-
-            if (normAllDict != null)
+            catch (Exception ex)
             {
-                foreach (var kvp in normAllDict)
-                {
-                    string normKey = kvp.Key;
-                    if (processedKeys.Contains(normKey)) continue;
-
-                    JObject pData = kvp.Value;
-                    string pNum = normKey.Split('_')[0];
-                    string safeLang = normKey.Contains("_") ? normKey.Split('_')[1] : "알 수 없음";
-                    string lang = safeLang.Replace("Sharp", "#").Replace("p", "+");
-
-                    string title = "-", date = "-";
-                    string diff = pData["diff"]?.ToString() ?? pData["difficulty"]?.ToString() ?? "-";
-                    string tags = pData["tags"]?.ToString() ?? "-";
-
-                    int tryCount = 1;
-                    bool hasCorrect = false;
-
-                    JToken attemptsToken = pData["attempts"];
-                    if (attemptsToken != null && attemptsToken.HasValues)
-                    {
-                        tryCount = attemptsToken.Children().Count();
-                        foreach (var attempt in attemptsToken)
-                        {
-                            string status = attempt.First?["status"]?.ToString() ?? attempt["status"]?.ToString();
-                            if (status == "correct") hasCorrect = true;
-                        }
-
-                        var firstAttempt = attemptsToken.First;
-                        if (firstAttempt is JProperty prop)
-                        {
-                            title = prop.Value["title"]?.ToString() ?? "-";
-                            date = prop.Value["date"]?.ToString() ?? "-";
-                            if (diff == "-") diff = prop.Value["diff"]?.ToString() ?? "-";
-                            if (tags == "-") tags = prop.Value["tags"]?.ToString() ?? "-";
-                        }
-                        else if (firstAttempt != null)
-                        {
-                            title = firstAttempt["title"]?.ToString() ?? "-";
-                            date = firstAttempt["date"]?.ToString() ?? "-";
-                            if (diff == "-") diff = firstAttempt["diff"]?.ToString() ?? "-";
-                            if (tags == "-") tags = firstAttempt["tags"]?.ToString() ?? "-";
-                        }
-                    }
-
-                    if (title == "-" || diff == "-" || tags == "-")
-                    {
-                        if (infoCache.ContainsKey(pNum))
-                        {
-                            if (title == "-") title = infoCache[pNum].title;
-                            if (diff == "-") diff = infoCache[pNum].diff;
-                            if (tags == "-") tags = infoCache[pNum].tags;
-                        }
-                        if (pNum == selId)
-                        {
-                            if (title == "-") title = selTitle;
-                            if (diff == "-") diff = selDiff;
-                            if (tags == "-") tags = selTags;
-                        }
-                    }
-
-                    if (rbCorrect != null && rbCorrect.Checked && !hasCorrect) continue;
-                    if (rbWrong != null && rbWrong.Checked && hasCorrect) continue;
-
-                    string resultText = hasCorrect ? $"✅ 해결됨 ({tryCount}-Try)" : "❌ 미해결";
-                    dgvWrongList.Rows.Add(pNum, title, lang, diff, tags, resultText, date, "-");
-                }
+                MessageBox.Show($"내역 로드 중 오류가 발생했습니다: {ex.Message}");
             }
         }
 
@@ -831,11 +904,14 @@ namespace codinglearning
             if (e.RowIndex >= 0 && !dgvWrongList.Rows[e.RowIndex].IsNewRow)
             {
                 DataGridViewRow row = dgvWrongList.Rows[e.RowIndex];
-                lblWrongProbNum.Text = row.Cells[0].Value?.ToString() ?? "-";
-                lblWrongProbTitle.Text = row.Cells[1].Value?.ToString() ?? "-";
-                lblWrongProbDiff.Text = row.Cells[3].Value?.ToString() ?? "-";
-                lblWrongProbTags.Text = row.Cells[4].Value?.ToString() ?? "-";
-                string resultText = row.Cells[5].Value?.ToString() ?? "-";
+
+                // 🌟 8열 디자인에 맞춘 방 번호(Index) 재할당!
+                lblWrongProbNum.Text = row.Cells[0].Value?.ToString() ?? "-";     // 0: 번호
+                lblWrongProbTitle.Text = row.Cells[1].Value?.ToString() ?? "-";   // 1: 제목
+                lblWrongProbDiff.Text = row.Cells[3].Value?.ToString() ?? "-";    // 3: 난이도 (2는 언어)
+                lblWrongProbTags.Text = row.Cells[4].Value?.ToString() ?? "-";    // 4: 태그
+
+                string resultText = row.Cells[5].Value?.ToString() ?? "-";        // 5: 결과
                 lblWrongProbResult.Text = resultText.Contains("미해결") ? "미해결" : "해결됨";
             }
         }
@@ -998,6 +1074,9 @@ namespace codinglearning
                 series.Color = isDarkMode ? Color.FromArgb(70, 85, 100) : Color.FromArgb(160, 170, 180);
                 series.IsValueShownAsLabel = true;
 
+                // 🌟 핵심 추가: 막대그래프를 새로 만들 때 다크모드면 흰색, 아니면 검은색 지정!
+                series.LabelForeColor = isDarkMode ? Color.White : Color.Black;
+
                 foreach (var kvp in dailyStudyMap)
                 {
                     string shortDate = kvp.Key.Substring(5);
@@ -1106,6 +1185,14 @@ namespace codinglearning
         {
             foreach (Control c in parent.Controls)
             {
+                if (c is LinkLabel ll)
+                {
+                    ll.BackColor = Color.Transparent;
+                    ll.LinkColor = text;             // 기본 링크 색상 (밝은 회색/흰색)
+                    ll.VisitedLinkColor = text;      // 눌렀던 링크 색상
+                    ll.ActiveLinkColor = accent;     // 누르는 순간의 색상
+                }
+
                 if (c is Label || c is CheckBox || c is RadioButton) { c.BackColor = Color.Transparent; c.ForeColor = text; }
                 else { c.BackColor = bg; c.ForeColor = text; }
 
@@ -1146,6 +1233,10 @@ namespace codinglearning
                     if (chart.Series.Count > 0)
                     {
                         chart.Series[0].BackGradientStyle = GradientStyle.None;
+
+                        // 🌟 여기에 숫자(라벨) 색상 변경 코드를 딱 한 줄 추가합니다!
+                        chart.Series[0].LabelForeColor = text;
+
                         if (chart.Name == "chartTimeHistory") chart.Series[0].Color = isDarkMode ? Color.FromArgb(70, 85, 100) : Color.FromArgb(160, 170, 180);
                         else if (chart.Name == "chartAccuracy")
                         {
