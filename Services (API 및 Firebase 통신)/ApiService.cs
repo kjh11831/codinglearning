@@ -38,10 +38,10 @@ namespace codinglearning.Services
 
         public async Task<(bool isCorrect, string message)> RunJudge0Async(string code, string language, string stdin, string expectedOutput)
         {
-            int langId = 51;
-            if (language == "C++") langId = 54;
-            else if (language == "Python") langId = 71;
-            else if (language == "Java") langId = 62;
+            if (!codinglearning.Models.AppConstants.Judge0LangIds.TryGetValue(language, out int langId))
+            {
+                return (false, $"❌ 지원하지 않는 언어입니다: {language}");
+            }
 
             string base64Code = Convert.ToBase64String(Encoding.UTF8.GetBytes(code));
             string base64Stdin = Convert.ToBase64String(Encoding.UTF8.GetBytes(stdin));
@@ -171,6 +171,7 @@ namespace codinglearning.Services
             {
                 string url = "https://codeforces.com/api/problemset.problems";
                 HttpResponseMessage response = await httpClient.GetAsync(url);
+
                 response.EnsureSuccessStatusCode();
 
                 string responseBody = await response.Content.ReadAsStringAsync();
@@ -181,10 +182,22 @@ namespace codinglearning.Services
                     return (JArray)data["result"]["problems"];
                 }
             }
+            // 🌟 1. 인터넷 연결 문제 또는 서버 다운 시
+            catch (HttpRequestException httpEx)
+            {
+                System.Windows.Forms.MessageBox.Show($"🌐 Codeforces 서버에 연결할 수 없습니다. 인터넷 상태를 확인해주세요.\n\n(상세 원인: {httpEx.Message})", "네트워크 오류", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+            }
+            // 🌟 2. 응답은 받았지만 JSON 데이터 형태가 깨졌거나 변경되었을 시
+            catch (Newtonsoft.Json.JsonException jsonEx)
+            {
+                System.Windows.Forms.MessageBox.Show($"🧩 데이터를 분석하는 중 문제가 발생했습니다. API 응답 구조가 변경되었을 수 있습니다.\n\n(상세 원인: {jsonEx.Message})", "데이터 처리 오류", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+            }
+            // 🌟 3. 그 외의 예상치 못한 시스템 오류
             catch (Exception ex)
             {
-                System.Windows.Forms.MessageBox.Show($"문제 목록을 가져오는 중 오류가 발생했습니다:\n{ex.Message}");
+                System.Windows.Forms.MessageBox.Show($"💻 알 수 없는 오류가 발생했습니다.\n\n(상세 원인: {ex.Message})", "시스템 오류", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
             }
+
             return null;
         }
 
@@ -193,10 +206,10 @@ namespace codinglearning.Services
         {
             try
             {
-                int langId = 51; // Judge0 기준 C# ID
-                if (language == "C++") langId = 54;
-                else if (language == "Python") langId = 71;
-                else if (language == "Java") langId = 62;
+                if (!codinglearning.Models.AppConstants.Judge0LangIds.TryGetValue(language, out int langId))
+                {
+                    return "❌ 지원하지 않는 언어입니다.";
+                }
 
                 string base64Code = Convert.ToBase64String(Encoding.UTF8.GetBytes(code));
 

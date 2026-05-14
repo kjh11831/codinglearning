@@ -291,6 +291,7 @@ namespace codinglearning
                     dgvProblems.Columns[2].Name = "난이도"; dgvProblems.Columns[3].Name = "태그"; dgvProblems.Columns[4].Name = "결과";
 
                     keyword = keyword.ToLower();
+
                     int minDiff = string.IsNullOrEmpty(minDiffStr) ? 0 : int.Parse(minDiffStr);
                     int maxDiff = string.IsNullOrEmpty(maxDiffStr) ? 3500 : int.Parse(maxDiffStr);
                     int count = 0;
@@ -313,8 +314,21 @@ namespace codinglearning
                     }
                 }
             }
-            catch (Exception ex) { MessageBox.Show("오류: " + ex.Message); }
-            finally { isSearching = false; btnSearch.Text = "검색"; }
+            // 🌟 1. int.Parse()에서 숫자가 아닌 값을 입력했을 때 발생하는 에러를 잡습니다.
+            catch (FormatException)
+            {
+                MessageBox.Show("난이도 입력 칸에는 반드시 숫자만 입력해주세요.", "입력 형식 오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            // 🌟 2. UI 조작 등 기타 시스템 예외
+            catch (Exception ex)
+            {
+                MessageBox.Show($"UI를 그리는 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                isSearching = false;
+                btnSearch.Text = "검색";
+            }
         }
 
         private void dgvProblems_CellClick(object sender, DataGridViewCellEventArgs e)
@@ -445,11 +459,13 @@ namespace codinglearning
             }
 
             string currentLang = cbLanguage.SelectedItem.ToString();
-            string cfLangId = "51";
-            if (currentLang == "C#") cfLangId = "65";
-            else if (currentLang == "C++") cfLangId = "54";
-            else if (currentLang == "Python") cfLangId = "71";
-            else if (currentLang == "Java") cfLangId = "60";
+
+            if (!codinglearning.Models.AppConstants.CFLangIds.TryGetValue(currentLang, out string cfLangId))
+            {
+                MessageBox.Show($"지원하지 않는 언어입니다: {currentLang}");
+                btnSubmitCF.Text = "CF 제출";
+                return;
+            }
 
             string contestId = new String(selId.Where(Char.IsDigit).ToArray());
             string index = new String(selId.Where(Char.IsLetter).ToArray());

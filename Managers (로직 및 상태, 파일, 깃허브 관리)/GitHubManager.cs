@@ -22,7 +22,7 @@ namespace codinglearning.Managers
                 processInfo.WorkingDirectory = targetFolder;
 
                 string commitMessage = $"Auto commit: {DateTime.Now.ToString("yyyy-MM-dd HH:mm")} 학습 기록";
-                processInfo.Arguments = $"/c git add . && git commit -m \"{commitMessage}\" && git push -u origin main";
+                processInfo.Arguments = $"/c git add . && git commit -m \"{commitMessage}\" && git pull --rebase origin main && git push -u origin main";
 
                 processInfo.CreateNoWindow = true;
                 processInfo.UseShellExecute = false;
