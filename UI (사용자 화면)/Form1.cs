@@ -869,25 +869,31 @@ namespace codinglearning
             if (dgvRecentRecords != null)
             {
                 dgvRecentRecords.Rows.Clear();
+
                 dgvRecentRecords.ColumnCount = 5;
-                dgvRecentRecords.Columns[0].Name = "번호"; dgvRecentRecords.Columns[1].Name = "제목";
-                dgvRecentRecords.Columns[2].Name = "언어"; dgvRecentRecords.Columns[3].Name = "결과"; dgvRecentRecords.Columns[4].Name = "날짜";
+
+                dgvRecentRecords.Columns[0].HeaderText = "번호";
+                dgvRecentRecords.Columns[1].HeaderText = "제목";
+                dgvRecentRecords.Columns[2].HeaderText = "언어";
+                dgvRecentRecords.Columns[3].HeaderText = "결과";
+                dgvRecentRecords.Columns[4].HeaderText = "날짜";
             }
 
             foreach (var problem in dict)
             {
                 totalProblems++;
                 bool hasCorrect = false;
-                string rawKey = problem.Key;
-                string pNum = rawKey.Split('_')[0];
-                string safeLang = rawKey.Contains("_") ? rawKey.Split('_')[1] : "알 수 없음";
-                string lang = safeLang.Replace("Sharp", "#").Replace("p", "+");
+                string pNum = problem.Key.Split('_')[0];
 
                 foreach (var attempt in problem.Value["attempts"])
                 {
                     string status = attempt.Value["status"];
                     string date = attempt.Value["date"];
-                    string title = attempt.Value["title"] != null ? attempt.Value["title"].ToString() : "-";
+                    string title = attempt.Value["title"]?.ToString() ?? "-";
+
+                    
+                    string lang = attempt.Value["language"]?.ToString() ?? "알 수 없음";
+
                     if (status == "correct") hasCorrect = true;
 
                     if (dgvRecentRecords != null)
