@@ -864,6 +864,7 @@ namespace codinglearning
         private void btnSolveAgain_Click(object sender, EventArgs e)
         {
             sessionManager.RecordUserAction();
+
             if (lblWrongProbNum.Text == "나야 번호" || string.IsNullOrEmpty(lblWrongProbNum.Text))
             {
                 MessageBox.Show("다시 풀 오답을 선택해주세요."); return;
@@ -873,6 +874,9 @@ namespace codinglearning
             selTitle = lblCodeProbTitle.Text = lblWrongProbTitle.Text;
             selDiff = lblCodeProbDiff.Text = lblWrongProbDiff.Text;
             selTags = lblCodeProbTags.Text = lblWrongProbTags.Text;
+
+            btnViewWrongProblem_Click(sender, e);
+
             tabControl1.SelectedIndex = 1;
         }
 
