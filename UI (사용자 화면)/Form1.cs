@@ -525,7 +525,7 @@ namespace codinglearning
         // 초기화 메서드 종료
         }
 
-        // 사용자가 작성한 코드를 단순히 서버에서 한 번 돌려보는(컴파일+실행) '예제 테스트' 버튼 클릭
+        // 사용자가 작성한 코드를 서버에서 실행하거나 예제 데이터를 가져와 자동으로 테스트해 보는 버튼 클릭 이벤트
         private async void btnRunSample_Click(object sender, EventArgs e)
         {
             // 이미 실행 중복 요청이 진행 중이면 무시
@@ -545,26 +545,91 @@ namespace codinglearning
             {
                 // 현재 콤보박스에서 선택된 언어 이름 추출
                 string currentLang = cbLanguage.SelectedItem.ToString();
+
                 // UI 갱신으로 사용자에게 처리 중임을 알림
                 btnRunSample.Text = "코드 실행 중...";
                 txtResult.Text = "⏳ 코드를 컴파일하고 실행하는 중입니다...\r\n\r\n";
 
-                // ApiService를 호출해 Judge0나 유사 API 등에 코드를 넘기고 실행 결과(표준 출력, 에러 등) 문자열을 받음
-                string rawOutput = await apiService.RunCodeOnlyAsync(txtCode.Text, currentLang);
-                // 결과창 포맷팅 및 출력 결합
-                txtResult.AppendText("==================== [실행 결과] ====================\r\n");
-                txtResult.AppendText(rawOutput);
-                txtResult.AppendText("\r\n=====================================================");
+                // 만약 현재 선택된 문제(selId)가 없다면 예제를 가져올 수 없으므로 '단순 실행'만 진행
+                if (string.IsNullOrEmpty(selId) || selId == "나야 번호" || selId == "-")
+                {
+                    txtResult.Text = "⏳ (선택된 문제가 없어 단순 코드 실행만 진행합니다...)\r\n\r\n";
+                    // ApiService를 호출해 코드를 넘기고 실행 결과(표준 출력, 에러 등)를 받음
+                    string rawOutput = await apiService.RunCodeOnlyAsync(txtCode.Text, currentLang);
+
+                    txtResult.AppendText("==================== [단순 실행 결과] ====================\r\n");
+                    txtResult.AppendText(rawOutput);
+                    txtResult.AppendText("\r\n=====================================================");
+                }
+                // 선택된 문제가 있다면 Codeforces에서 예제를 긁어와 '자동 채점 테스트' 진행
+                else
+                {
+                    txtResult.Text = $"⏳ [{selId}] 문제의 예제 입출력 데이터를 가져오는 중입니다...\r\n\r\n";
+
+                    // ApiService의 유령이었던 'FetchSampleDataFromWebAsync'를 호출해 입력/출력 쌍을 리스트로 받아옴
+                    var (inputs, outputs, errorMsg) = await apiService.FetchSampleDataFromWebAsync(selId);
+
+                    // 만약 크롤링에 실패했거나 예제를 찾지 못했다면
+                    if (!string.IsNullOrEmpty(errorMsg))
+                    {
+                        txtResult.AppendText($"[예제 데이터 가져오기 실패]\r\n{errorMsg}\r\n\r\n");
+                        txtResult.AppendText("⚠️ 문제가 발생하여 기존의 '단순 코드 실행' 모드로 전환합니다...\r\n\r\n");
+
+                        // 예제 테스트를 포기하고 단순 실행으로 Fallback(대체) 처리
+                        string rawOutput = await apiService.RunCodeOnlyAsync(txtCode.Text, currentLang);
+                        txtResult.AppendText("==================== [단순 실행 결과] ====================\r\n");
+                        txtResult.AppendText(rawOutput);
+                        txtResult.AppendText("\r\n=====================================================");
+                    }
+                    // 성공적으로 예제 쌍을 가져왔다면 본격적인 테스트 시작
+                    else
+                    {
+                        txtResult.Text = $"✅ 총 {inputs.Count}개의 예제를 찾았습니다. 자동 테스트를 시작합니다...\r\n\r\n";
+
+                        // 모든 예제를 통과했는지 확인하기 위한 플래그
+                        bool allPassed = true;
+
+                        // 가져온 예제의 개수만큼 반복문을 돌면서 하나씩 Judge0로 채점
+                        for (int i = 0; i < inputs.Count; i++)
+                        {
+                            txtResult.AppendText($"==================== [예제 {i + 1}] ====================\r\n");
+
+                            // 'RunJudge0Async' 호출. 코드, 언어, 예제입력값, 예상출력값을 모두 던져서 비교 판별함
+                            var (isCorrect, msg) = await apiService.RunJudge0Async(txtCode.Text, currentLang, inputs[i], outputs[i]);
+
+                            // 각 예제별 결과를 UI 결과창에 덧붙여 출력
+                            txtResult.AppendText(msg + "\r\n\r\n");
+
+                            // 하나라도 틀렸다면 올패스 플래그를 false로 변경
+                            if (!isCorrect) allPassed = false;
+                        }
+
+                        txtResult.AppendText("=====================================================\r\n");
+
+                        // 모든 예제를 정답 처리받았을 경우 격려 메시지
+                        if (allPassed)
+                        {
+                            txtResult.AppendText($"🎉 완벽합니다! 모든 예제 테스트를 통과했습니다. 이제 [CF 제출]을 눌러 실제 서버에 채점을 받아보세요!\r\n");
+                            MessageBox.Show("🎉 완벽합니다! 모든 예제 테스트를 통과했습니다.\n이제 [CF 제출]을 눌러 실제 서버에 채점을 받아보세요!", "테스트 통과", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        // 하나라도 틀렸을 경우 수정 권고 메시지
+                        else
+                        {
+                            txtResult.AppendText($"⚠️ 오답이 발생한 예제가 있습니다. 코드의 로직이나 출력 형식을 다시 한번 확인해 주세요.\r\n");
+                            MessageBox.Show("⚠️ 오답이 발생한 예제가 있습니다.\n결과창을 보고 코드의 로직이나 출력 형식을 다시 한번 확인해 주세요.", "테스트 실패", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
-                // 실행에 실패하거나 런타임/컴파일 타임 에러 발생 시 결과창에 에러 메시지 텍스트 표기
+                // 실행에 실패하거나 기타 예외 발생 시 결과창에 에러 메시지 텍스트 표기
                 txtResult.Text = $"오류 발생: {ex.Message}";
                 // 예외 블록 종료
             }
             finally
             {
-                // 플래그 끄고 버튼 상태 원상 복구
+                // 모든 처리가 끝났으므로 진행 중 플래그를 끄고 버튼 상태를 원상 복구
                 isRunningSample = false;
                 // 원래 문구
                 btnRunSample.Text = "예제 테스트 실행";
