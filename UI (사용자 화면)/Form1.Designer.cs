@@ -29,12 +29,12 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend3 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend4 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblTimer = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
@@ -400,17 +400,17 @@
             this.chartTimeHistory.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            chartArea1.Name = "ChartArea1";
-            this.chartTimeHistory.ChartAreas.Add(chartArea1);
-            legend1.Name = "Legend1";
-            this.chartTimeHistory.Legends.Add(legend1);
+            chartArea3.Name = "ChartArea1";
+            this.chartTimeHistory.ChartAreas.Add(chartArea3);
+            legend3.Name = "Legend1";
+            this.chartTimeHistory.Legends.Add(legend3);
             this.chartTimeHistory.Location = new System.Drawing.Point(15, 29);
             this.chartTimeHistory.Name = "chartTimeHistory";
-            series1.ChartArea = "ChartArea1";
-            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
-            series1.Legend = "Legend1";
-            series1.Name = "Series1";
-            this.chartTimeHistory.Series.Add(series1);
+            series3.ChartArea = "ChartArea1";
+            series3.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
+            series3.Legend = "Legend1";
+            series3.Name = "Series1";
+            this.chartTimeHistory.Series.Add(series3);
             this.chartTimeHistory.Size = new System.Drawing.Size(1046, 247);
             this.chartTimeHistory.TabIndex = 0;
             this.chartTimeHistory.Text = "chart1";
@@ -509,17 +509,17 @@
             this.chartAccuracy.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            chartArea2.Name = "ChartArea1";
-            this.chartAccuracy.ChartAreas.Add(chartArea2);
-            legend2.Name = "Legend1";
-            this.chartAccuracy.Legends.Add(legend2);
+            chartArea4.Name = "ChartArea1";
+            this.chartAccuracy.ChartAreas.Add(chartArea4);
+            legend4.Name = "Legend1";
+            this.chartAccuracy.Legends.Add(legend4);
             this.chartAccuracy.Location = new System.Drawing.Point(15, 29);
             this.chartAccuracy.Name = "chartAccuracy";
-            series2.ChartArea = "ChartArea1";
-            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
-            series2.Legend = "Legend1";
-            series2.Name = "Series1";
-            this.chartAccuracy.Series.Add(series2);
+            series4.ChartArea = "ChartArea1";
+            series4.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
+            series4.Legend = "Legend1";
+            series4.Name = "Series1";
+            this.chartAccuracy.Series.Add(series4);
             this.chartAccuracy.Size = new System.Drawing.Size(1046, 252);
             this.chartAccuracy.TabIndex = 0;
             this.chartAccuracy.Text = "chart1";
@@ -1024,7 +1024,7 @@
             this.btnRetryTranslate.BackColor = System.Drawing.Color.White;
             this.btnRetryTranslate.Cursor = System.Windows.Forms.Cursors.Help;
             this.btnRetryTranslate.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnRetryTranslate.Location = new System.Drawing.Point(695, 33);
+            this.btnRetryTranslate.Location = new System.Drawing.Point(694, 33);
             this.btnRetryTranslate.Name = "btnRetryTranslate";
             this.btnRetryTranslate.Size = new System.Drawing.Size(113, 39);
             this.btnRetryTranslate.TabIndex = 5;
