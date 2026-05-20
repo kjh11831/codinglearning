@@ -146,6 +146,22 @@ namespace codinglearning
             // 기본 선택 값을 첫 번째 언어인 'C#'으로 설정
             cbLanguage.SelectedIndex = 0;
 
+            // 난이도 라벨에 마우스를 올렸을 때 Codeforces 난이도 체계에 대한 설명이 담긴 툴팁이 뜨도록 설정
+            ToolTip diffToolTip = new ToolTip();
+            diffToolTip.IsBalloon = true;      // 둥근 말풍선 모양 설정
+            diffToolTip.AutoPopDelay = 10000;  // 말풍선 유지 시간 (10초)
+            diffToolTip.InitialDelay = 200;    // 마우스 올리고 0.2초 뒤에 표시
+
+            string helpText = "Codeforces 난이도(Rating) 안내\n" +
+                              "• 800 ~ 1199: Newbie (초보)\n" +
+                              "• 1200 ~ 1399: Pupil (입문)\n" +
+                              "• 1400 ~ 1599: Specialist (숙련)\n" +
+                              "• 1600 이상: Expert (전문가)\n\n" +
+                              "숫자가 높을수록 어려운 문제입니다.";
+
+            // 난이도 라벨에 툴팁 연결
+            diffToolTip.SetToolTip(lblDifficulty, helpText);
+
             // 통계 차트의 기본 시리즈 이름 설정
             if (chartAccuracy != null && chartAccuracy.Series.Count > 0)
             {
