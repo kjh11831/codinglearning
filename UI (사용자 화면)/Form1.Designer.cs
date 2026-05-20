@@ -29,12 +29,12 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea3 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend3 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series3 = new System.Windows.Forms.DataVisualization.Charting.Series();
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea4 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend4 = new System.Windows.Forms.DataVisualization.Charting.Legend();
-            System.Windows.Forms.DataVisualization.Charting.Series series4 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblTimer = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
@@ -142,7 +142,7 @@
             this.btnSearch = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.txtKeyword = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
+            this.lblKeyword = new System.Windows.Forms.Label();
             this.txtMaxDifficulty = new System.Windows.Forms.TextBox();
             this.txtMinDifficulty = new System.Windows.Forms.TextBox();
             this.lblDifficulty = new System.Windows.Forms.Label();
@@ -227,6 +227,7 @@
             this.lblGitHubPush.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.lblGitHubPush.AutoSize = true;
             this.lblGitHubPush.BackColor = System.Drawing.Color.Transparent;
+            this.lblGitHubPush.Cursor = System.Windows.Forms.Cursors.Help;
             this.lblGitHubPush.Font = new System.Drawing.Font("맑은 고딕", 9.857143F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.lblGitHubPush.Location = new System.Drawing.Point(977, 624);
             this.lblGitHubPush.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
@@ -399,17 +400,17 @@
             this.chartTimeHistory.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            chartArea3.Name = "ChartArea1";
-            this.chartTimeHistory.ChartAreas.Add(chartArea3);
-            legend3.Name = "Legend1";
-            this.chartTimeHistory.Legends.Add(legend3);
+            chartArea1.Name = "ChartArea1";
+            this.chartTimeHistory.ChartAreas.Add(chartArea1);
+            legend1.Name = "Legend1";
+            this.chartTimeHistory.Legends.Add(legend1);
             this.chartTimeHistory.Location = new System.Drawing.Point(15, 29);
             this.chartTimeHistory.Name = "chartTimeHistory";
-            series3.ChartArea = "ChartArea1";
-            series3.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
-            series3.Legend = "Legend1";
-            series3.Name = "Series1";
-            this.chartTimeHistory.Series.Add(series3);
+            series1.ChartArea = "ChartArea1";
+            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
+            series1.Legend = "Legend1";
+            series1.Name = "Series1";
+            this.chartTimeHistory.Series.Add(series1);
             this.chartTimeHistory.Size = new System.Drawing.Size(1046, 247);
             this.chartTimeHistory.TabIndex = 0;
             this.chartTimeHistory.Text = "chart1";
@@ -508,17 +509,17 @@
             this.chartAccuracy.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            chartArea4.Name = "ChartArea1";
-            this.chartAccuracy.ChartAreas.Add(chartArea4);
-            legend4.Name = "Legend1";
-            this.chartAccuracy.Legends.Add(legend4);
+            chartArea2.Name = "ChartArea1";
+            this.chartAccuracy.ChartAreas.Add(chartArea2);
+            legend2.Name = "Legend1";
+            this.chartAccuracy.Legends.Add(legend2);
             this.chartAccuracy.Location = new System.Drawing.Point(15, 29);
             this.chartAccuracy.Name = "chartAccuracy";
-            series4.ChartArea = "ChartArea1";
-            series4.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
-            series4.Legend = "Legend1";
-            series4.Name = "Series1";
-            this.chartAccuracy.Series.Add(series4);
+            series2.ChartArea = "ChartArea1";
+            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Bar;
+            series2.Legend = "Legend1";
+            series2.Name = "Series1";
+            this.chartAccuracy.Series.Add(series2);
             this.chartAccuracy.Size = new System.Drawing.Size(1046, 252);
             this.chartAccuracy.TabIndex = 0;
             this.chartAccuracy.Text = "chart1";
@@ -643,6 +644,7 @@
             // rbWrong
             // 
             this.rbWrong.AutoSize = true;
+            this.rbWrong.Cursor = System.Windows.Forms.Cursors.Help;
             this.rbWrong.Location = new System.Drawing.Point(372, 32);
             this.rbWrong.Margin = new System.Windows.Forms.Padding(2);
             this.rbWrong.Name = "rbWrong";
@@ -656,6 +658,7 @@
             // rbCorrect
             // 
             this.rbCorrect.AutoSize = true;
+            this.rbCorrect.Cursor = System.Windows.Forms.Cursors.Help;
             this.rbCorrect.Location = new System.Drawing.Point(158, 32);
             this.rbCorrect.Margin = new System.Windows.Forms.Padding(2);
             this.rbCorrect.Name = "rbCorrect";
@@ -670,6 +673,7 @@
             // 
             this.rbAll.AutoSize = true;
             this.rbAll.Checked = true;
+            this.rbAll.Cursor = System.Windows.Forms.Cursors.Help;
             this.rbAll.Location = new System.Drawing.Point(15, 32);
             this.rbAll.Margin = new System.Windows.Forms.Padding(2);
             this.rbAll.Name = "rbAll";
@@ -719,6 +723,7 @@
             // 
             this.btnExportWrongList.AutoSize = true;
             this.btnExportWrongList.BackColor = System.Drawing.Color.White;
+            this.btnExportWrongList.Cursor = System.Windows.Forms.Cursors.Help;
             this.btnExportWrongList.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnExportWrongList.Location = new System.Drawing.Point(26, 509);
             this.btnExportWrongList.Name = "btnExportWrongList";
@@ -804,6 +809,7 @@
             // 
             this.btnSolveAgain.AutoSize = true;
             this.btnSolveAgain.BackColor = System.Drawing.Color.White;
+            this.btnSolveAgain.Cursor = System.Windows.Forms.Cursors.Help;
             this.btnSolveAgain.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSolveAgain.Location = new System.Drawing.Point(127, 464);
             this.btnSolveAgain.Name = "btnSolveAgain";
@@ -817,6 +823,7 @@
             // 
             this.btnViewWrongProblem.AutoSize = true;
             this.btnViewWrongProblem.BackColor = System.Drawing.Color.White;
+            this.btnViewWrongProblem.Cursor = System.Windows.Forms.Cursors.Help;
             this.btnViewWrongProblem.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnViewWrongProblem.Location = new System.Drawing.Point(9, 464);
             this.btnViewWrongProblem.Name = "btnViewWrongProblem";
@@ -1015,6 +1022,7 @@
             // btnRetryTranslate
             // 
             this.btnRetryTranslate.BackColor = System.Drawing.Color.White;
+            this.btnRetryTranslate.Cursor = System.Windows.Forms.Cursors.Help;
             this.btnRetryTranslate.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRetryTranslate.Location = new System.Drawing.Point(695, 33);
             this.btnRetryTranslate.Name = "btnRetryTranslate";
@@ -1027,6 +1035,7 @@
             // btnResetCode
             // 
             this.btnResetCode.BackColor = System.Drawing.Color.White;
+            this.btnResetCode.Cursor = System.Windows.Forms.Cursors.Help;
             this.btnResetCode.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnResetCode.Location = new System.Drawing.Point(575, 33);
             this.btnResetCode.Name = "btnResetCode";
@@ -1039,6 +1048,7 @@
             // btnSubmitCF
             // 
             this.btnSubmitCF.BackColor = System.Drawing.Color.White;
+            this.btnSubmitCF.Cursor = System.Windows.Forms.Cursors.Help;
             this.btnSubmitCF.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSubmitCF.Location = new System.Drawing.Point(457, 33);
             this.btnSubmitCF.Name = "btnSubmitCF";
@@ -1051,6 +1061,7 @@
             // btnRunSample
             // 
             this.btnRunSample.BackColor = System.Drawing.Color.White;
+            this.btnRunSample.Cursor = System.Windows.Forms.Cursors.Help;
             this.btnRunSample.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRunSample.Location = new System.Drawing.Point(273, 33);
             this.btnRunSample.Name = "btnRunSample";
@@ -1062,6 +1073,7 @@
             // 
             // cbLanguage
             // 
+            this.cbLanguage.Cursor = System.Windows.Forms.Cursors.Help;
             this.cbLanguage.FormattingEnabled = true;
             this.cbLanguage.Location = new System.Drawing.Point(87, 38);
             this.cbLanguage.Name = "cbLanguage";
@@ -1255,6 +1267,7 @@
             // 
             this.btnViewProblem.AutoSize = true;
             this.btnViewProblem.BackColor = System.Drawing.Color.White;
+            this.btnViewProblem.Cursor = System.Windows.Forms.Cursors.Help;
             this.btnViewProblem.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnViewProblem.Location = new System.Drawing.Point(12, 503);
             this.btnViewProblem.Name = "btnViewProblem";
@@ -1309,7 +1322,7 @@
             this.groupBox1.Controls.Add(this.btnSearch);
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.txtKeyword);
-            this.groupBox1.Controls.Add(this.label3);
+            this.groupBox1.Controls.Add(this.lblKeyword);
             this.groupBox1.Controls.Add(this.txtMaxDifficulty);
             this.groupBox1.Controls.Add(this.txtMinDifficulty);
             this.groupBox1.Controls.Add(this.lblDifficulty);
@@ -1325,6 +1338,7 @@
             // 
             this.btnSearchAll.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
             this.btnSearchAll.BackColor = System.Drawing.Color.White;
+            this.btnSearchAll.Cursor = System.Windows.Forms.Cursors.Help;
             this.btnSearchAll.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSearchAll.Location = new System.Drawing.Point(748, 37);
             this.btnSearchAll.Name = "btnSearchAll";
@@ -1339,6 +1353,7 @@
             // 
             this.btnResetSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
             this.btnResetSearch.BackColor = System.Drawing.Color.White;
+            this.btnResetSearch.Cursor = System.Windows.Forms.Cursors.Help;
             this.btnResetSearch.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnResetSearch.Location = new System.Drawing.Point(651, 37);
             this.btnResetSearch.Name = "btnResetSearch";
@@ -1353,6 +1368,7 @@
             // 
             this.btnSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
             this.btnSearch.BackColor = System.Drawing.Color.White;
+            this.btnSearch.Cursor = System.Windows.Forms.Cursors.Help;
             this.btnSearch.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnSearch.Location = new System.Drawing.Point(554, 37);
             this.btnSearch.Name = "btnSearch";
@@ -1384,16 +1400,17 @@
             this.txtKeyword.TabIndex = 0;
             this.txtKeyword.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
-            // label3
+            // lblKeyword
             // 
-            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(344, 39);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(67, 23);
-            this.label3.TabIndex = 1;
-            this.label3.Text = "키워드";
-            this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblKeyword.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)));
+            this.lblKeyword.AutoSize = true;
+            this.lblKeyword.Cursor = System.Windows.Forms.Cursors.Help;
+            this.lblKeyword.Location = new System.Drawing.Point(344, 39);
+            this.lblKeyword.Name = "lblKeyword";
+            this.lblKeyword.Size = new System.Drawing.Size(67, 23);
+            this.lblKeyword.TabIndex = 1;
+            this.lblKeyword.Text = "키워드";
+            this.lblKeyword.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // txtMaxDifficulty
             // 
@@ -1676,7 +1693,7 @@
         private System.Windows.Forms.Button btnSearch;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox txtKeyword;
-        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label lblKeyword;
         private System.Windows.Forms.TextBox txtMaxDifficulty;
         private System.Windows.Forms.TextBox txtMinDifficulty;
         private System.Windows.Forms.Label lblDifficulty;

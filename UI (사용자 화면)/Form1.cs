@@ -146,6 +146,28 @@ namespace codinglearning
             // 기본 선택 값을 첫 번째 언어인 'C#'으로 설정
             cbLanguage.SelectedIndex = 0;
 
+            // 각 버튼과 라벨에 마우스를 올렸을 때 도움말이 담긴 툴팁이 뜨도록 설정
+            ToolTip searchToolTip = new ToolTip();
+            searchToolTip.IsBalloon = true;
+            searchToolTip.AutoPopDelay = 10000;
+            searchToolTip.InitialDelay = 200;
+
+            // 검색 버튼 설명
+            string searchBtnHelp = "입력한 난이도 범위와 키워드 조건에 맞는 문제를 Codeforces에서 검색합니다.";
+            searchToolTip.SetToolTip(btnSearch, searchBtnHelp);
+
+            // 초기화 버튼 설명
+            string resetSearchHelp = "입력한 검색 조건과 현재 불러온 문제 목록을 모두 깨끗하게 비웁니다.";
+            searchToolTip.SetToolTip(btnResetSearch, resetSearchHelp);
+
+            // 전체 버튼 설명
+            string searchAllHelp = "아무런 조건 없이 Codeforces의 최근 문제 목록(상위 50개)을 그대로 가져옵니다.";
+            searchToolTip.SetToolTip(btnSearchAll, searchAllHelp);
+
+            // 문제 보기 버튼 설명 (우측 하단)
+            string viewProbHelp = "목록에서 선택한 문제의 원본 웹페이지를 새 창에서 엽니다.\n문제를 읽고 복사할 수 있습니다.";
+            searchToolTip.SetToolTip(btnViewProblem, viewProbHelp);
+
             // 난이도 라벨에 마우스를 올렸을 때 Codeforces 난이도 체계에 대한 설명이 담긴 툴팁이 뜨도록 설정
             ToolTip diffToolTip = new ToolTip();
             diffToolTip.IsBalloon = true;      // 둥근 말풍선 모양 설정
@@ -161,6 +183,100 @@ namespace codinglearning
 
             // 난이도 라벨에 툴팁 연결
             diffToolTip.SetToolTip(lblDifficulty, helpText);
+
+            // 키워드 라벨에 마우스를 올렸을 때 검색 방법과 예시가 담긴 툴팁이 뜨도록 설정
+            ToolTip keywordToolTip = new ToolTip();
+            keywordToolTip.IsBalloon = true;
+            keywordToolTip.AutoPopDelay = 10000;
+            keywordToolTip.InitialDelay = 200;
+
+            string keywordHelpText = "키워드 검색 안내\n" +
+                                     "• 문제 제목이나 알고리즘 태그에 포함된 단어를 검색합니다.\n" +
+                                     "• 검색 예시: dp, greedy, math, strings\n\n" +
+                                     "대소문자 구분 없이 입력하셔도 자동으로 검색됩니다.";
+
+            // 키워드 라벨에 툴팁 연결
+            keywordToolTip.SetToolTip(lblKeyword, keywordHelpText);
+
+            // 각 주요 액션 버튼들에 대한 툴팁 설정 (언어 선택, 예제 실행, CF 제출, 코드 초기화, AI 번역 재시도)
+            ToolTip actionToolTip = new ToolTip();
+            actionToolTip.IsBalloon = true;
+            actionToolTip.AutoPopDelay = 10000;
+            actionToolTip.InitialDelay = 200;
+
+            // 언어 선택 콤보박스 설명
+            string langHelpText = "작성할 프로그래밍 언어를 선택합니다.\n코드가 작성된 상태에서 언어를 변경하면 🤖AI가 코드를 해당 언어로 자동 번역해 줍니다!";
+            actionToolTip.SetToolTip(cbLanguage, langHelpText);
+
+            // 예제 테스트 실행 버튼 설명
+            string runHelpText = "작성한 코드를 Codeforces 서버의 예제 데이터를 가져와 자동으로 테스트합니다.\n(문제가 선택되지 않은 경우 단순 코드 실행만 진행됩니다.)";
+            actionToolTip.SetToolTip(btnRunSample, runHelpText);
+
+            // CF 제출 버튼 설명
+            string submitHelpText = "작성한 코드를 Codeforces 서버에 실제로 제출하고 채점 결과를 확인합니다.\n제출 결과는 통계와 오답 노트에 자동 기록됩니다.";
+            actionToolTip.SetToolTip(btnSubmitCF, submitHelpText);
+
+            // 초기화 버튼 설명
+            string resetHelpText = "작성 중인 코드와 하단의 실행 결과창을 모두 깨끗하게 지웁니다.";
+            actionToolTip.SetToolTip(btnResetCode, resetHelpText);
+
+            // 다시 번역 버튼 설명
+            string retryHelpText = "AI 번역 결과가 어색하거나 마음에 들지 않나요?\n이 버튼을 누르면 AI에게 동일한 코드를 다시 번역하도록 재요청합니다.";
+            actionToolTip.SetToolTip(btnRetryTranslate, retryHelpText);
+
+            // 오답 노트 탭의 각 요소들에 대한 툴팁 설정 (조회 조건 라디오 버튼, 문제 보기, 다시 풀기, 요약 본 내보내기)
+            ToolTip historyToolTip = new ToolTip();
+            historyToolTip.IsBalloon = true;
+            historyToolTip.AutoPopDelay = 10000;
+            historyToolTip.InitialDelay = 200;
+
+            // 라디오 버튼 (조회 조건) 설명
+            string rbAllHelpText = "모든 문제 풀이 내역과 오답 노트를 확인합니다.";
+            historyToolTip.SetToolTip(rbAll, rbAllHelpText);
+
+            string rbCorrectHelpText = "이전에 틀렸다가 다시 풀어서 최종적으로 정답(해결)을 맞춘 문제들만 모아 봅니다.";
+            historyToolTip.SetToolTip(rbCorrect, rbCorrectHelpText);
+
+            string rbWrongHelpText = "아직 풀지 못했거나 계속 오답인 문제들만 모아 봅니다.\n(복습 예정일이 지난 경우 붉은색으로 강조됩니다!)";
+            historyToolTip.SetToolTip(rbWrong, rbWrongHelpText);
+
+            // 문제 보기 버튼 설명
+            string viewWrongHelpText = "선택한 오답 문제의 Codeforces 원본 페이지를 새 창에서 엽니다.";
+            historyToolTip.SetToolTip(btnViewWrongProblem, viewWrongHelpText);
+
+            // 다시 풀기 버튼 설명
+            string solveAgainHelpText = "선택한 오답 문제를 다시 풀 수 있도록 원본 문제를 띄우고,\n'코드 작성' 탭으로 즉시 화면을 이동합니다.";
+            historyToolTip.SetToolTip(btnSolveAgain, solveAgainHelpText);
+
+            // 요약 본 내보내기 버튼 설명
+            string exportHelpText = "현재 표에 보여지는 오답 노트 기록을 마크다운(.md) 표 형식으로 변환하여 바탕화면에 저장합니다.\n블로그나 노션(Notion)에 학습 기록을 정리할 때 복붙하기 유용합니다!";
+            historyToolTip.SetToolTip(btnExportWrongList, exportHelpText);
+
+            // 상태 표시줄의 학습 타이머 라벨과 잔디 심기 라벨에 대한 툴팁 객체 생성
+            ToolTip statusBalloonTip = new ToolTip();
+            statusBalloonTip.IsBalloon = true;
+
+            // 3. 학습 타이머 라벨에 마우스를 올렸을 때(MouseEnter) 말풍선 띄우기
+            lblTimer.MouseEnter += (s, ev) =>
+            {
+                string timerHelpText = "현재 진행 중인 학습 세션 시간입니다.\n" +
+                                       "5분 이상 마우스/키보드 움직임이 없으면 자동으로 유휴(Idle) 상태로 전환됩니다.\n\n" +
+                                       "💡 앱을 종료하면 지금까지의 누적 학습 시간이\n데이터베이스에 자동 기록되어 통계에 반영됩니다!";
+
+                // 라벨의 한가운데 쯤에 말풍선 꼬리가 오도록 좌표 계산
+                int x = lblTimer.Bounds.X + (lblTimer.Bounds.Width / 2);
+                int y = lblTimer.Bounds.Y;
+
+                // 상태 표시줄(statusStrip1)을 기준으로 말풍선 10초간 강제 호출
+                statusBalloonTip.Show(timerHelpText, statusStrip1, x, y, 10000);
+            };
+
+            // 마우스가 타이머에서 벗어나면(MouseLeave) 말풍선 숨기기
+            lblTimer.MouseLeave += (s, ev) => statusBalloonTip.Hide(statusStrip1);
+
+            // 잔디 심기 (GitHub Push) 라벨 툴팁
+            string githubHelpText = "🌱 지금까지 로컬에 저장된 코드들을 내 GitHub 저장소로 자동 커밋하고 푸시(Push)합니다!\n멋지게 잔디를 심어보세요.";
+            statusBalloonTip.SetToolTip(lblGitHubPush, githubHelpText);
 
             // 통계 차트의 기본 시리즈 이름 설정
             if (chartAccuracy != null && chartAccuracy.Series.Count > 0)
