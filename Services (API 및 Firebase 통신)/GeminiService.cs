@@ -1,12 +1,14 @@
 ﻿// 기본 시스템 라이브러리 및 비동기 처리, HTTP 통신, 데이터 변환(LINQ) 네임스페이스 선언
+// JSON 데이터 직렬화 및 JObject 파싱을 위한 Newtonsoft.Json 네임스페이스 선언
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-// JSON 데이터 직렬화 및 JObject 파싱을 위한 Newtonsoft.Json 네임스페이스 선언
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace codinglearning.Services
 {
@@ -14,7 +16,7 @@ namespace codinglearning.Services
     public class GeminiService
     {
         // Gemini API에 접근하기 위한 인증 키 (Trim()을 통해 불필요한 공백 제거)
-        private readonly string apiKey = "AIzaSyBHLbgljhk8AJ8dbnMvwbdFyLfVpwFGujI".Trim();
+        private readonly string apiKey = "AIzaSyBFdYwz42RepfeeTwEeV2_0zx6Xzx7s0e8".Trim();
 
         // 원본 코드, 원본 언어, 타겟(번역할) 언어, 그리고 진행 상태를 UI 텍스트 박스에 실시간으로 전달할 콜백 함수(onProgress)를 매개변수로 받는 비동기 메서드
         public async Task<(bool isSuccess, string resultText)> TranslateCodeAsync(string code, string sourceLang, string targetLang, Action<string> onProgress)
@@ -89,14 +91,11 @@ namespace codinglearning.Services
                     string url = $"https://generativelanguage.googleapis.com/v1beta/{targetModel}:generateContent?key={apiKey}";
 
                     // Gemini에게 번역을 지시할 프롬프트(명령어) 텍스트 작성
-                    // 경쟁 프로그래밍(코테) 전문가 역할 부여, 동일 로직 유지, 자료형 유지(64비트 등), 불필요한 설명이나 마크다운 백틱(```) 없이 순수하게 코드만 출력하라는 엄격한 규칙(Strict Rules) 포함
-                    string prompt = $@"You are an expert competitive programming translator. Translate the following {sourceLang} code to {targetLang}. 
-Strict Rules:
-1. EXACT MATCH: Maintain the exact same logic and algorithm. DO NOT optimize or fix bugs.
-2. DATA TYPES: Preserve 64-bit integers (e.g. long) strictly. Do not downgrade to int.
-3. FORMAT: Output ONLY the raw translated code. Do NOT wrap the code in markdown blocks like ```csharp or ```java. Do NOT add any explanations or text, just the code itself.
+                    string prompt = $@"당신은 친절한 코딩 테스트 멘토입니다.
+다음 {sourceLang} 코드를 {targetLang} 코드로 완벽하게 번역해주세요.
+인사말이나 마크다운 기호 없이, 오직 번역된 소스 코드 원본만 결과로 반환하세요.
 
-Code to translate:
+[원본 {sourceLang} 코드]
 {code}";
 
                     // Gemini API 규격에 맞게 JSON 요청 본문(Payload)의 골격을 익명 객체로 생성
@@ -161,6 +160,56 @@ Code to translate:
                 // 앱 강제 종료를 막고 예외의 핵심 메시지를 묶어 반환
                 return (false, $"인터넷 연결이나 시스템 오류가 발생했습니다:\n{ex.Message}");
             }
+        }
+
+        public async Task<(bool isSuccess, List<string> hints, string errorMessage)> GetHintAsync(string problemId, string title, string language)
+        {
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    string url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={apiKey}";
+
+                    string prompt = $@"당신은 코딩 테스트 멘토입니다. '{problemId}: {title}' 문제를 {language}로 푸는 힌트를 주세요.
+반드시 아래 형식을 지키고, '안녕하세요' 같은 인사말은 절대 하지 마세요. 가독성을 위해 줄바꿈을 많이 쓰세요.
+
+[1단계: 핵심 알고리즘]
+(알고리즘 설명)
+
+[2단계: 핵심 로직 힌트]
+(로직 설명)
+
+[3단계: 주의할 점 및 반례]
+(주의사항 설명)";
+
+                    var requestBody = new { contents = new[] { new { parts = new[] { new { text = prompt } } } } };
+                    var content = new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8, "application/json");
+                    var response = await client.PostAsync(url, content);
+                    string responseString = await response.Content.ReadAsStringAsync();
+                    var textToken = JObject.Parse(responseString)["candidates"]?[0]?["content"]?["parts"]?[0]?["text"];
+
+                    if (textToken != null)
+                    {
+                        string rawText = textToken.ToString().Trim();
+
+                        // 🌟 [필살기] AI가 한 덩어리로 줘도 여기서 강제로 찢어버립니다.
+                        string safeText = rawText.Replace("[1단계", "@@@STEP@@@[1단계")
+                                                 .Replace("[2단계", "@@@STEP@@@[2단계")
+                                                 .Replace("[3단계", "@@@STEP@@@[3단계");
+
+                        // 마침표 뒤에 엔터 2번 강제 주입하여 벽돌 현상 방지
+                        safeText = System.Text.RegularExpressions.Regex.Replace(safeText, @"\.\s*", ".\r\n\r\n");
+
+                        string[] parts = safeText.Split(new string[] { "@@@STEP@@@" }, StringSplitOptions.RemoveEmptyEntries);
+                        List<string> hints = parts.Where(p => p.Trim().Length > 10).Select(p => p.Trim()).ToList();
+
+                        if (hints.Count == 0) hints.Add(rawText);
+                        return (true, hints, "");
+                    }
+                    return (false, null, "응답 없음");
+                }
+            }
+            catch (Exception ex) { return (false, null, ex.Message); }
         }
     }
 }

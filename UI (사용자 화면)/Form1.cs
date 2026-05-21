@@ -645,6 +645,10 @@ namespace codinglearning
 
             // 실행 중 플래그 활성화
             isRunningSample = true;
+
+            // 작업 시작 시 다른 버튼 모두 잠금
+            ToggleActionButtons(false);
+
             // API 에러를 잡기 위한 try 블록
             try
             {
@@ -738,6 +742,9 @@ namespace codinglearning
                 isRunningSample = false;
                 // 원래 문구
                 btnRunSample.Text = "예제 테스트 실행";
+
+                // 작업 종료 시 다른 버튼 모두 잠금 해제
+                ToggleActionButtons(true);
             }
         }
 
@@ -786,6 +793,10 @@ namespace codinglearning
 
             // 처리 과정 UI 안내
             btnSubmitCF.Text = "제출 창 여는 중...";
+
+            // 제출 시작 시 다른 버튼 모두 잠금
+            ToggleActionButtons(false);
+
             // 로직 에러 대비 블록 시작
             try
             {
@@ -1061,8 +1072,154 @@ namespace codinglearning
             {
                 // 텍스트 원래대로 롤백
                 btnSubmitCF.Text = "CF 제출";
-            // 최종 종료
+
+                // 제출 완료/에러 발생 시 잠금 해제
+                ToggleActionButtons(true);
+                // 최종 종료
             }
+        }
+
+        // 💡 AI 힌트 보기 버튼 클릭 이벤트
+        private async void btnAskAI_Click(object sender, EventArgs e)
+        {
+            sessionManager.RecordUserAction();
+            if (string.IsNullOrEmpty(selId) || selId == "-" || selId == "나야 번호")
+            {
+                MessageBox.Show("힌트를 받을 문제를 먼저 선택해주세요.", "안내", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            string currentLang = cbLanguage.SelectedItem?.ToString() ?? "C#";
+
+            ToggleActionButtons(false);
+            btnAskAI.Text = "힌트 생성 중...";
+
+            var (isSuccess, resultData, errorMsg) = await geminiService.GetHintAsync(selId, selTitle, currentLang);
+
+            ToggleActionButtons(true);
+            btnAskAI.Text = "💡 AI 힌트 보기";
+
+            if (isSuccess)
+            {
+                // 🚀 핵심 수정: 억지로 하나의 문자열로 합치지 않고 List 그대로 전달
+                ShowHintPopup(resultData);
+            }
+            else
+            {
+                MessageBox.Show(errorMsg, "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+
+        // 💡 [수정됨] 매개변수로 List<string>을 직접 받습니다.
+        private void ShowHintPopup(List<string> hintList)
+        {
+            // 🚀 핵심 수정: 자비 없는 정규식 강제 줄바꿈 로직 삭제. 
+            // 이미 깔끔하게 3단계로 나뉜 리스트가 들어옵니다.
+
+            if (hintList == null || hintList.Count == 0)
+            {
+                MessageBox.Show("표시할 힌트 데이터가 없습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // ============================================================================
+            // 물리적 분리 화면 (SplitContainer) UI 구성
+            // ============================================================================
+            Form hintForm = new Form();
+            hintForm.Text = $"🤖 [{selId}] AI 힌트 노트";
+            hintForm.Size = new Size(600, 650);
+            hintForm.StartPosition = FormStartPosition.CenterScreen;
+            hintForm.TopMost = true;
+
+            SplitContainer split = new SplitContainer();
+            split.Dock = DockStyle.Fill;
+            split.Orientation = Orientation.Horizontal; // 위아래로 쪼개기
+            split.SplitterDistance = 550; // 윗부분(텍스트)에 550픽셀 할당
+            split.FixedPanel = FixedPanel.Panel2; // 아랫부분(버튼) 영역 크기 고정
+            split.IsSplitterFixed = true; // 유저가 경계선 못 움직이게 고정
+            hintForm.Controls.Add(split);
+
+            RichTextBox txtHint = new RichTextBox();
+            txtHint.Dock = DockStyle.Fill;
+            txtHint.Font = new Font("맑은 고딕", 11.5f, FontStyle.Regular); // 글씨 크기
+            txtHint.ReadOnly = true;
+            txtHint.BorderStyle = BorderStyle.None;
+
+            // 첫 번째 힌트 표시
+            txtHint.Text = hintList[0];
+
+            // 양옆 여백 주기 (RichTextBox 전용 고급 기능)
+            txtHint.SelectAll();
+            txtHint.SelectionIndent = 15;
+            txtHint.SelectionRightIndent = 15;
+            txtHint.DeselectAll();
+
+            Button btnNext = new Button();
+            btnNext.Dock = DockStyle.Fill;
+            btnNext.Font = new Font("맑은 고딕", 11, FontStyle.Bold);
+            btnNext.Cursor = Cursors.Hand;
+
+            // 다크모드 색상 세팅
+            if (isDarkMode)
+            {
+                hintForm.BackColor = Color.FromArgb(30, 30, 30);
+                txtHint.BackColor = Color.FromArgb(37, 37, 38);
+                txtHint.ForeColor = Color.White;
+                btnNext.BackColor = Color.FromArgb(60, 60, 65);
+                btnNext.ForeColor = Color.White;
+                btnNext.FlatStyle = FlatStyle.Flat;
+                btnNext.FlatAppearance.BorderColor = Color.FromArgb(100, 100, 100);
+            }
+            else
+            {
+                hintForm.BackColor = SystemColors.Control;
+                txtHint.BackColor = Color.White;
+                txtHint.ForeColor = Color.Black;
+                btnNext.BackColor = SystemColors.ControlLight;
+                btnNext.ForeColor = Color.Black;
+            }
+
+            // 쪼개놓은 구역에 각각 밀어넣기
+            split.Panel1.Controls.Add(txtHint);
+            split.Panel2.Controls.Add(btnNext);
+
+            int currentStep = 1;
+            if (hintList.Count > 1)
+            {
+                btnNext.Text = $"다음 힌트 보기 (현재 1단계 / 전체 {hintList.Count}단계)";
+            }
+            else
+            {
+                btnNext.Text = "모든 힌트를 확인했습니다.";
+                btnNext.Enabled = false;
+            }
+
+            btnNext.Click += (s, ev) =>
+            {
+                if (currentStep < hintList.Count)
+                {
+                    txtHint.AppendText("\r\n\r\n" + new string('=', 40) + "\r\n\r\n");
+                    txtHint.AppendText(hintList[currentStep]);
+                    currentStep++;
+
+                    // 스크롤 맨 아래로 이동
+                    txtHint.SelectionStart = txtHint.Text.Length;
+                    txtHint.ScrollToCaret();
+
+                    if (currentStep >= hintList.Count)
+                    {
+                        btnNext.Text = "모든 힌트를 확인했습니다.";
+                        btnNext.Enabled = false;
+                    }
+                    else
+                    {
+                        btnNext.Text = $"다음 힌트 보기 (현재 {currentStep}단계 / 전체 {hintList.Count}단계)";
+                    }
+                }
+            };
+
+            hintForm.Show(this);
         }
         #endregion
 
@@ -1960,6 +2117,20 @@ namespace codinglearning
                 // 메인 포어치 종료
             }
         }
+
+        // 전체 주요 실행 버튼을 한 번에 켜고 끄는 마법의 헬퍼 함수
+        private void ToggleActionButtons(bool isEnabled)
+        {
+            // 코드 작성 탭의 핵심 버튼들 상태 동기화
+            btnRunSample.Enabled = isEnabled;
+            btnSubmitCF.Enabled = isEnabled;
+            btnResetCode.Enabled = isEnabled;
+            btnRetryTranslate.Enabled = isEnabled;
+
+            // 새로 만든 AI 힌트 버튼과 언어 선택 콤보박스도 묶어줍니다.
+            btnAskAI.Enabled = isEnabled;
+            cbLanguage.Enabled = isEnabled;
+        }
         #endregion
 
         #region [ 6. AI 번역 관련 메서드 ]
@@ -2064,8 +2235,8 @@ namespace codinglearning
         // 실제로 AI Gemini 서비스에 통신을 지시하는 래퍼 메서드
         private async Task<bool> RequestTranslation(string code, string sourceLang, string targetLang)
         {
-            // 통신 중 유저가 또 언어를 바꾸는 걸 막기 위해 드롭다운 비활성화
-            cbLanguage.Enabled = false;
+            // 번역이 진행되는 동안 UI의 주요 버튼들을 잠궈서 중복 요청이나 이상한 상태 진입 방지
+            ToggleActionButtons(false);
             // 만약 에러나면 돌려놓을 백업용 기존 텍스트
             string originalText = txtCode.Text;
 
@@ -2075,8 +2246,8 @@ namespace codinglearning
                 txtCode.Text = msg;
                 txtCode.Refresh();
             });
-            // 번역이 끝나면 콤보박스 잠금 해제
-            cbLanguage.Enabled = true;
+            // 번역 시도가 끝났으니 버튼들 다시 활성화
+            ToggleActionButtons(true);
 
             // 결과 성공 유무 판단
             if (isSuccess)

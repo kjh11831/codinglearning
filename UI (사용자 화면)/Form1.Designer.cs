@@ -154,6 +154,7 @@
             this.Tags = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Result = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.btnAskAI = new System.Windows.Forms.Button();
             this.statusStrip1.SuspendLayout();
             this.tabPage5.SuspendLayout();
             this.groupBox14.SuspendLayout();
@@ -1005,6 +1006,7 @@
             // 
             this.groupBox7.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox7.Controls.Add(this.btnAskAI);
             this.groupBox7.Controls.Add(this.btnRetryTranslate);
             this.groupBox7.Controls.Add(this.btnResetCode);
             this.groupBox7.Controls.Add(this.btnSubmitCF);
@@ -1535,6 +1537,19 @@
             this.tabControl1.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.tabControl1_DrawItem);
             this.tabControl1.Click += new System.EventHandler(this.tabControl1_SelectedIndexChanged);
             // 
+            // btnAskAI
+            // 
+            this.btnAskAI.BackColor = System.Drawing.Color.White;
+            this.btnAskAI.Cursor = System.Windows.Forms.Cursors.Help;
+            this.btnAskAI.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnAskAI.Location = new System.Drawing.Point(833, 33);
+            this.btnAskAI.Name = "btnAskAI";
+            this.btnAskAI.Size = new System.Drawing.Size(123, 39);
+            this.btnAskAI.TabIndex = 6;
+            this.btnAskAI.Text = "💡 AI 답안 보기";
+            this.btnAskAI.UseVisualStyleBackColor = false;
+            this.btnAskAI.Click += new System.EventHandler(this.btnAskAI_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
@@ -1711,6 +1726,7 @@
         private System.Windows.Forms.RadioButton rbCorrect;
         private System.Windows.Forms.Label lblWrongProbTags;
         private System.Windows.Forms.Label lblSelProbTags;
+        private System.Windows.Forms.Button btnAskAI;
     }
 }
 
